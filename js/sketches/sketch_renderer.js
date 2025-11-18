@@ -35,6 +35,12 @@
                 window.VizBar.draw(p, manager, ai, progress);
                 return;
             }
+
+            // NEW: section 8 -> VizOutro
+            if (ai === 8) {
+                window.VizOutro.draw(p, manager, ai, progress);
+                return;
+            }
         }
     };
 })();
