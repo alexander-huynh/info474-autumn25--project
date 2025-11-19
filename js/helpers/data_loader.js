@@ -21,10 +21,50 @@
         });
     }
 
+    function loadFinalData(url) {
+        // default path if none is provided
+        url = url || 'data/FinalData.csv';
+
+        return fetch(url)
+            .then(function (r) { return r.text(); })
+            .then(function (text) {
+                var lines = (text || '').trim().split(/\r?\n/);
+                if (!lines.length) return [];
+
+                var header = lines[0].split(',');
+                var idxCo2 = header.indexOf('Co2 Nedc Gpkm');
+                var idxPower = header.indexOf('Engine Power Kw');
+
+                if (idxCo2 === -1 || idxPower === -1) {
+                    console.warn('FinalData.csv is missing expected columns');
+                    return [];
+                }
+
+                var rows = lines.slice(1);
+                var out = [];
+
+                rows.forEach(function (line) {
+                    if (!line.trim()) return;
+                    var parts = line.split(',');
+
+                    var co2 = parseFloat(parts[idxCo2]);
+                    var power = parseFloat(parts[idxPower]);
+
+                    if (!isNaN(co2) && !isNaN(power)) {
+                        out.push({ co2: co2, power: power });
+                    }
+                });
+
+                return out;
+            });
+    }
+
+
     window.DataLoader = {
-        parseTSV: parseTSV,
-        loadTSV: loadTSV
-    };
+       parseTSV: parseTSV,
+       loadTSV: loadTSV,
+       loadFinalData: loadFinalData
+   };
 
     // Shared preprocess helper: normalize rows into the shape sketches expect.
     // Accepts an array of objects {word, time, filler, min} (as returned by parseTSV)
