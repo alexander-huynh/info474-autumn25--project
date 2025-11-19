@@ -50,6 +50,12 @@
                 return;
             }
 
+            // NEW: section 8 -> VizOutro
+            if (ai === 9) {
+                window.VizBar3.draw(p, manager, ai, progress);
+                return;
+            }
+
 
         }
     };
