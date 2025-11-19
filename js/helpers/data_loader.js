@@ -31,8 +31,10 @@
                 var lines = (text || '').trim().split(/\r?\n/);
                 if (!lines.length) return [];
 
-                var header = lines[0].split(',');
-                var idxCo2 = header.indexOf('co2_nedc_gpkm');
+                // Parse header
+                var header = lines[0].split(',').map(function (h) { return h.trim(); });
+
+                var idxCo2   = header.indexOf('co2_nedc_gpkm');
                 var idxPower = header.indexOf('engine_capacity_cc');
 
                 if (idxCo2 === -1 || idxPower === -1) {
@@ -47,17 +49,27 @@
                     if (!line.trim()) return;
                     var parts = line.split(',');
 
-                    var co2 = parseFloat(parts[idxCo2]);
-                    var power = parseFloat(parts[idxPower]);
+                    // Build full row object with all original columns
+                    var rowObj = {};
+                    header.forEach(function (name, i) {
+                        rowObj[name] = (parts[i] !== undefined) ? parts[i].trim() : '';
+                    });
+
+                    // Add numeric convenience fields for visuals
+                    var co2   = parseFloat(rowObj['co2_nedc_gpkm']);
+                    var power = parseFloat(rowObj['engine_capacity_cc']);
 
                     if (!isNaN(co2) && !isNaN(power)) {
-                        out.push({ co2: co2, power: power });
+                        rowObj.co2   = co2;   // numeric CO2
+                        rowObj.power = power; // numeric engine size / power
+                        out.push(rowObj);
                     }
                 });
 
                 return out;
             });
     }
+
 
 
     window.DataLoader = {

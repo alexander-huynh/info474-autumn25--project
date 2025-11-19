@@ -49,6 +49,11 @@
                 window.VizOutro.draw(p, manager, ai, progress);
                 return;
             }
+
+            if (ai === 9) {
+                window.VizScatter2.draw(p, manager, ai, progress);
+                return;
+            }
         }
     };
 })();
