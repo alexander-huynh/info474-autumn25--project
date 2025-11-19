@@ -5,18 +5,26 @@
     window.Renderer = {
 
         setData: function (manager) {
-            var self = this;
-
+            // basic layout offsets
             manager.offsetX = (manager.margin && manager.margin.left) || 20;
             manager.offsetY = (manager.margin && manager.margin.top) || 0;
 
-            function computeLayout(data) {
-                manager.data = data;
-            }
-
-            computeLayout([]);
-            return Promise.resolve(manager.data);
+            // load FinalData.csv using your new helper
+            return DataLoader.loadFinalData()
+                .then(function (rows) {
+                    manager.data = Array.isArray(rows) ? rows : [];
+                    try {
+                        console.log('Renderer.setData: loaded rows:', manager.data.length);
+                    } catch (e) { }
+                    return manager.data;
+                })
+                .catch(function (err) {
+                    console.error('Renderer.setData: error loading FinalData.csv', err);
+                    manager.data = [];
+                    return manager.data;
+                });
         },
+
 
         draw: function (p, manager, ai, progress) {
             try { console.log('Renderer: delegating draw, ai=', ai); } catch (e) { }

@@ -1,39 +1,31 @@
 // viz_scatter.js
-// Data-agnostic scatter viz — draws cached random points and updates them
-// only occasionally to reduce churn.
+// Simple debug view: just report whether data loaded and show first row.
 (function () {
     window.VizScatter = {
         draw: function (p, manager, ai, progress) {
-            p.noStroke();
-            var cols = manager.width || 600;
-            var rows = manager.height || 520;
-            var offsetX = (manager.offsetX || 0);
-            var offsetY = (manager.offsetY || 0);
-            var count = 120;
-            var updateEvery = 15; // frames between regenerations (~0.5s at 30fps)
+            var data = manager.data || [];
+            var left = manager.offsetX || 0;
+            var top = manager.offsetY || 0;
+            var w = manager.width || 600;
+            var h = manager.height || 520;
 
-            if (!manager._randomPoints || (p.frameCount % updateEvery === 0)) {
-                var pts = [];
-                for (var i = 0; i < count; i++) {
-                    var rx = offsetX + Math.random() * cols;
-                    var ry = offsetY + Math.random() * rows;
-                    var rsz = 2 + Math.random() * 6;
-                    var r = Math.floor(30 + Math.random() * 60);
-                    var g = Math.floor(100 + Math.random() * 80);
-                    var b = Math.floor(160 + Math.random() * 40);
-                    var a = 180;
-                    pts.push({ x: rx, y: ry, r: rsz, c: [r, g, b, a] });
-                }
-                manager._randomPoints = pts;
+            p.background(255);
+            p.fill(0);
+            p.textAlign(p.CENTER, p.CENTER);
+            p.textSize(16);
+
+            if (!data.length) {
+                p.text('No data loaded for scatterplot.', left + w / 2, top + h / 2);
+                return;
             }
 
-            var pts = manager._randomPoints || [];
-            for (var j = 0; j < pts.length; j++) {
-                var ptd = pts[j];
-                var col = ptd.c;
-                p.fill(col[0], col[1], col[2], col[3]);
-                p.ellipse(ptd.x, ptd.y, ptd.r, ptd.r);
-            }
+            // If we have data, show how many rows and the first row's values
+            var first = data[0] || {};
+            var line1 = 'Rows loaded: ' + data.length;
+            var line2 = 'First row → co2: ' + first.co2 + ', power: ' + first.power;
+
+            p.text(line1, left + w / 2, top + h / 2 - 12);
+            p.text(line2, left + w / 2, top + h / 2 + 12);
         }
     };
 })();
