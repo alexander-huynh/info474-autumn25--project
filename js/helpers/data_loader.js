@@ -33,7 +33,7 @@
 
                 var header = lines[0].split(',');
                 var idxCo2 = header.indexOf('co2_nedc_gpkm');
-                var idxPower = header.indexOf('engine_power_kw');
+                var idxPower = header.indexOf('engine_capacity_cc');
 
                 if (idxCo2 === -1 || idxPower === -1) {
                     console.warn('FinalData.csv is missing expected columns');

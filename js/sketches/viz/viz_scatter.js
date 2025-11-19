@@ -19,13 +19,36 @@
                 return;
             }
 
-            // If we have data, show how many rows and the first row's values
-            var first = data[0] || {};
-            var line1 = 'Rows loaded: ' + data.length;
-            var line2 = 'First row → co2: ' + first.co2 + ', power: ' + first.power;
+            // If we have data, draw a simple scatter: power (x) vs co2 (y)
 
-            p.text(line1, left + w / 2, top + h / 2 - 12);
-            p.text(line2, left + w / 2, top + h / 2 + 12);
+            // Get min/max for scaling
+            var minPower = Infinity, maxPower = -Infinity;
+            var minCo2 = Infinity, maxCo2 = -Infinity;
+            for (var i = 0; i < data.length; i++) {
+                var d = data[i];
+                if (d.power < minPower) minPower = d.power;
+                if (d.power > maxPower) maxPower = d.power;
+                if (d.co2 < minCo2) minCo2 = d.co2;
+                if (d.co2 > maxCo2) maxCo2 = d.co2;
+            }
+
+            // Simple margins inside the canvas
+            var innerLeft = left + 40;
+            var innerRight = left + w - 20;
+            var innerTop = top + 20;
+            var innerBottom = top + h - 40;
+
+            // Draw points
+            p.noStroke();
+            p.fill(50, 120, 220, 150);
+
+            for (var j = 0; j < data.length; j++) {
+                var dpt = data[j];
+                var x = p.map(dpt.power, minPower, maxPower, innerLeft, innerRight);
+                var y = p.map(dpt.co2, minCo2, maxCo2, innerBottom, innerTop);
+                p.circle(x, y, 3);
+            }
+
         }
     };
 })();
