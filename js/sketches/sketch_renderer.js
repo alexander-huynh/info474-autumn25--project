@@ -49,10 +49,13 @@
                 return;
             }
 
-            if (ai >= 4 && ai < 7) {
-                window.VizBar.draw(p, manager, ai, progress);
+
+            if (ai === 4) { // Engine Size vs CO2
+                window.VizBar2.draw(p, manager, ai, progress);
                 return;
             }
+
+
 
             if (ai === 7) {
                 window.VizScatter.draw(p, manager, ai, progress);
