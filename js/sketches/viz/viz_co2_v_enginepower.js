@@ -50,10 +50,10 @@
         if (d.co2 > maxCo2) maxCo2 = d.co2;
       }
 
-      // Inner plot area
-      var innerLeft = left + 60; // extra room for y labels
-      var innerRight = left + w - 20;
-      var innerTop = top + 30;
+      // Inner plot area (extra top room for title + subtitle + legend)
+      var innerLeft   = left + 60;       // extra room for y labels
+      var innerRight  = left + w - 20;
+      var innerTop    = top + 60;        // was top + 30
       var innerBottom = top + h - 50;
 
       // --- 1. User interaction: set / move threshold ---------------------
@@ -98,29 +98,35 @@
       var xticks = 5;
       for (var xi = 0; xi <= xticks; xi++) {
         var t = xi / xticks;
-        var val = p.lerp(minPower, maxPower, t);
-        var xPos = p.map(val, minPower, maxPower, innerLeft, innerRight);
+
+        // rounded ticks: nearest 10 kW
+        var rawX = p.lerp(minPower, maxPower, t);
+        var xv   = Math.round(rawX / 10) * 10;
+        var xPos = p.map(xv, minPower, maxPower, innerLeft, innerRight);
 
         p.stroke(0);
         p.line(xPos, innerBottom, xPos, innerBottom + 4);
 
         p.noStroke();
         p.textAlign(p.CENTER, p.TOP);
-        p.text(Math.round(val), xPos, innerBottom + 6);
+        p.text(xv, xPos, innerBottom + 6);
       }
 
       var yticks = 5;
       for (var yi = 0; yi <= yticks; yi++) {
         var ty = yi / yticks;
-        var v = p.lerp(minCo2, maxCo2, ty);
-        var yPos = p.map(v, minCo2, maxCo2, innerBottom, innerTop);
+
+        // rounded ticks: nearest 20 g/km
+        var rawY = p.lerp(minCo2, maxCo2, ty);
+        var yv   = Math.round(rawY / 20) * 20;
+        var yPos = p.map(yv, minCo2, maxCo2, innerBottom, innerTop);
 
         p.stroke(0);
         p.line(innerLeft - 4, yPos, innerLeft, yPos);
 
         p.noStroke();
         p.textAlign(p.RIGHT, p.CENTER);
-        p.text(Math.round(v), innerLeft - 6, yPos);
+        p.text(yv, innerLeft - 6, yPos);
       }
 
       // --- 4. Axis labels -------------------------------------------------
@@ -139,32 +145,62 @@
       p.text('CO₂ NEDC (g/km)', 0, 0);
       p.pop();
 
-      // --- 5. Title -------------------------------------------------------
+      // --- 5. Title + subtitle -------------------------------------------
       p.textAlign(p.CENTER, p.BOTTOM);
       p.textSize(14);
       p.text(
         'CO₂ Emissions vs Engine Power (kW)',
         left + w / 2,
-        innerTop - 8
+        innerTop - 24
       );
+
+      p.textSize(11);
+      p.textAlign(p.CENTER, p.TOP);
+      p.text(
+        'Drag the vertical line to change what counts as “high power”.',
+        left + w / 2,
+        innerTop - 10
+      );
+
+      // Mini legend (gray vs blue)
+      p.noStroke();
+      p.textAlign(p.LEFT, p.CENTER);
+      p.textSize(11);
+
+      // lower-power (gray)
+      p.fill(120, 120, 120, 120);
+      p.circle(innerLeft + 10, innerTop + 8, 5);
+      p.fill(0);
+      p.text('Lower-power cars', innerLeft + 20, innerTop + 8);
+
+      // "high power" (blue)
+      p.fill(50, 120, 220, 180);
+      p.circle(innerLeft + 10, innerTop + 24, 5);
+      p.fill(0);
+      p.text('“High power” (≥ threshold)', innerLeft + 20, innerTop + 24);
 
       // --- 6. Draw points with threshold highlighting ---------------------
       var countAbove = 0;
+      var totalCo2   = 0;
+      var co2Above   = 0;
 
-      // pass 1: dim points below threshold
+      // pass 1: dim points below threshold, accumulate stats
       p.noStroke();
       for (var a = 0; a < pts.length; a++) {
         var p1 = pts[a];
         var x1 = p.map(p1.powerKw, minPower, maxPower, innerLeft, innerRight);
-        var y1 = p.map(p1.co2, minCo2, maxCo2, innerBottom, innerTop);
+        var y1 = p.map(p1.co2,      minCo2,   maxCo2,   innerBottom, innerTop);
+
+        totalCo2 += p1.co2;
 
         if (p1.powerKw < powerThreshold) {
           p.fill(120, 120, 120, 40); // faded
+          p.circle(x1, y1, 3);
         } else {
           countAbove++;
-          continue; // draw in bright pass
+          co2Above += p1.co2;
+          // bright pass later
         }
-        p.circle(x1, y1, 3);
       }
 
       // pass 2: bright points above threshold
@@ -175,7 +211,7 @@
         if (p2.powerKw < powerThreshold) continue;
 
         var x2 = p.map(p2.powerKw, minPower, maxPower, innerLeft, innerRight);
-        var y2 = p.map(p2.co2, minCo2, maxCo2, innerBottom, innerTop);
+        var y2 = p.map(p2.co2,      minCo2,   maxCo2,   innerBottom, innerTop);
         p.circle(x2, y2, 3);
       }
 
@@ -186,18 +222,26 @@
       p.strokeWeight(2);
       p.line(thrX, innerTop, thrX, innerBottom);
 
-      var pctAbove = Math.round((countAbove / pts.length) * 100);
+      var pctCars = Math.round((countAbove / pts.length) * 100);
+      var pctCo2  = totalCo2 > 0 ? Math.round((co2Above / totalCo2) * 100) : 0;
+
       var labelText =
-        'High-power ≥ ' + Math.round(powerThreshold) + ' kW  (' +
-        pctAbove + '% of cars)';
+        'High power ≥ ' + Math.round(powerThreshold) + ' kW\n' +
+        pctCars + '% of cars, ~' + pctCo2 + '% of CO₂';
 
       p.noStroke();
       p.fill(255);
       p.rectMode(p.CENTER);
-      p.rect(thrX, innerBottom + 40, 230, 30, 6);
+
+      // dynamic width for two-line label
+      p.textSize(11);
+      var tw = p.textWidth('High power ≥ ' + Math.round(powerThreshold) + ' kW') + 24;
+      var rectW = Math.max(230, tw);
+      var rectH = 36;
+
+      p.rect(thrX, innerBottom + 40, rectW, rectH, 6);
 
       p.fill(0);
-      p.textSize(11);
       p.textAlign(p.CENTER, p.CENTER);
       p.text(labelText, thrX, innerBottom + 40);
 
