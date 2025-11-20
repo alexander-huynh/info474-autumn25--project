@@ -8,14 +8,14 @@
             p.push();
             p.noStroke();
             p.fill(255);
-            var w = 420;
+            var w = 620;
             var h = 120;
             p.rect(cx - w / 2, cy - h / 2, w, h, 6);
 
             p.fill(0);
             p.textAlign(p.CENTER, p.CENTER);
             p.textSize(48);
-            p.text(ai === 0 ? 'INFO 474' : 'Final Project', cx, cy);
+            p.text(ai === 0 ? 'Not All Cars Pollute Equally' : 'Final Project', cx, cy);
             p.pop();
         }
     };

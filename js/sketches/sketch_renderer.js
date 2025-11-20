@@ -30,7 +30,7 @@
             try { console.log('Renderer: delegating draw, ai=', ai); } catch (e) { }
 
             if (ai === 0) {
-                window.VizTitle.draw(p, manager, ai, progress);
+                // window.VizTitle.draw(p, manager, ai, progress);
                 return;
             }
 
