@@ -35,9 +35,10 @@
                 if (d.co2   > maxCo2)   maxCo2   = d.co2;
             }
 
+            // give more room at the top for title + subtitle + legend
             var innerLeft   = left + 60;
             var innerRight  = left + w - 20;
-            var innerTop    = top + 30;
+            var innerTop    = top + 60;   // was top + 30
             var innerBottom = top + h - 50;
 
             // --- 1. User interaction: set / move threshold -----------------
@@ -74,7 +75,10 @@
             var xticks = 5;
             for (var xi = 0; xi <= xticks; xi++) {
                 var t  = xi / xticks;
-                var xv = p.lerp(minPower, maxPower, t);
+
+                // rounded, more readable tick labels
+                var rawX = p.lerp(minPower, maxPower, t);
+                var xv   = Math.round(rawX / 100) * 100; // snap to nearest 100 cc
                 var xPos = p.map(xv, minPower, maxPower, innerLeft, innerRight);
 
                 p.stroke(0);
@@ -82,13 +86,16 @@
 
                 p.noStroke();
                 p.textAlign(p.CENTER, p.TOP);
-                p.text(Math.round(xv), xPos, innerBottom + 6);
+                p.text(xv, xPos, innerBottom + 6);
             }
 
             var yticks = 5;
             for (var yi = 0; yi <= yticks; yi++) {
                 var ty = yi / yticks;
-                var yv = p.lerp(minCo2, maxCo2, ty);
+
+                // rounded, more readable CO₂ ticks
+                var rawY = p.lerp(minCo2, maxCo2, ty);
+                var yv   = Math.round(rawY / 20) * 20; // snap to nearest 20 g/km
                 var yPos = p.map(yv, minCo2, maxCo2, innerBottom, innerTop);
 
                 p.stroke(0);
@@ -96,13 +103,13 @@
 
                 p.noStroke();
                 p.textAlign(p.RIGHT, p.CENTER);
-                p.text(Math.round(yv), innerLeft - 6, yPos);
+                p.text(yv, innerLeft - 6, yPos);
             }
 
             // Axis labels
             p.textAlign(p.CENTER, p.TOP);
             p.textSize(12);
-            p.text('Engine Size (cc)', (innerLeft + innerRight) / 2, innerBottom + 24);
+            p.text('Size (cc)', (innerLeft + innerRight) / 2, innerBottom + 24);
 
             p.push();
             p.translate(left + 20, (innerTop + innerBottom) / 2);
@@ -111,10 +118,36 @@
             p.text('CO₂ NEDC (g/km)', 0, 0);
             p.pop();
 
-            // Title
+            // Title (above plot area)
             p.textAlign(p.CENTER, p.BOTTOM);
             p.textSize(14);
-            p.text('CO₂ Emissions vs Engine Size', left + w / 2, innerTop - 8);
+            p.text('CO₂ Emissions vs Engine Size', left + w / 2, innerTop - 24);
+
+            // Instruction subtitle under title
+            p.textSize(11);
+            p.textAlign(p.CENTER, p.TOP);
+            p.text(
+                'Drag the vertical line to change what counts as a “big engine”.',
+                left + w / 2,
+                innerTop - 10
+            );
+
+            // Mini legend, now a bit lower inside the plot
+            p.noStroke();
+            p.textAlign(p.LEFT, p.CENTER);
+            p.textSize(11);
+
+            // smaller engines (gray)
+            p.fill(120, 120, 120, 120);
+            p.circle(innerLeft + 10, innerTop + 8, 5);
+            p.fill(0);
+            p.text('Smaller engines', innerLeft + 20, innerTop + 8);
+
+            // "big engines" (blue)
+            p.fill(50, 120, 220, 180);
+            p.circle(innerLeft + 10, innerTop + 24, 5);
+            p.fill(0);
+            p.text('“Big engines” (≥ threshold)', innerLeft + 20, innerTop + 24);
 
             // --- 3. Draw points with threshold highlighting ----------------
             var countAbove = 0;
