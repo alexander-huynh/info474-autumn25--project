@@ -91,4 +91,14 @@
 
 }
 
+/* Images inside scroll sections (left column) */
+.step .section-image {
+  display: block;
+  max-width: 200%;        /* never wider than the text column */
+  height: auto;           /* keep aspect ratio */
+  margin: 1.5rem auto 0;  /* top margin + center horizontally */
+  border-radius: 4px;
+  max-height: 40vh;       /* prevent super tall images */
+  object-fit: cover;      /* crop a bit instead of distorting if tall */
+}
 

@@ -33,9 +33,22 @@ function startP5() {
             };
 
             p.draw = function () {
-                p.background(255);
+                // which section is active?
+                var ai = (self.state && typeof self.state.activeIndex === 'number')
+                    ? self.state.activeIndex
+                    : 0;
+
+                if (ai === 0) {
+                    // Intro section: no white box, let page background show through
+                    p.clear();   // transparent canvas
+                } else {
+                    // All other sections keep the white viz area
+                    p.background(255);
+                }
+
                 self.draw(p);
             };
+
         };
 
         this.p5 = new p5(sketch);
