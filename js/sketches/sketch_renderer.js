@@ -39,6 +39,11 @@
                 return;
             }
 
+            if (ai === 6) {
+                window.VizSearchCar.draw(p, manager, ai, progress);
+                return;
+            }
+
             if (ai >= 4 && ai < 7) {
                 window.VizBar.draw(p, manager, ai, progress);
                 return;
@@ -60,8 +65,6 @@
                 window.VizBar3.draw(p, manager, ai, progress);
                 return;
             }
-
-            
 
 
         }
