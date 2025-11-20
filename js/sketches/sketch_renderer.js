@@ -59,11 +59,15 @@
 
 
             // NEW: section 8 -> VizOutro
-            if (ai === 9) {
+            if (ai === 8) {
                 window.VizBar3.draw(p, manager, ai, progress);
                 return;
             }
 
+            if (ai === 6) {
+                window.VizSearchCar.draw(p, manager, ai, progress);
+                return;
+            }
 
         }
     };
