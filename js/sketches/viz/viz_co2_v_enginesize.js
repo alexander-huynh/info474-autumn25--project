@@ -1,6 +1,10 @@
 // viz_scatter.js
-// Simple debug view: just report whether data loaded and show first row.
+// CO₂ vs Engine Size with interactive "big engine" threshold line
 (function () {
+
+    // persistent state across frames
+    var engineThreshold = null;   // in same units as d.power (cc)
+    
     window.VizScatter = {
         draw: function (p, manager, ai, progress) {
             var data = manager.data || [];
@@ -19,79 +23,87 @@
                 return;
             }
 
-            // If we have data, draw a simple scatter: power (x) vs co2 (y)
-
-            // Get min/max for scaling
+            // --- 0. Min/max for scaling ------------------------------------
             var minPower = Infinity, maxPower = -Infinity;
-            var minCo2 = Infinity, maxCo2 = -Infinity;
+            var minCo2 = Infinity,   maxCo2 = -Infinity;
+
             for (var i = 0; i < data.length; i++) {
                 var d = data[i];
                 if (d.power < minPower) minPower = d.power;
                 if (d.power > maxPower) maxPower = d.power;
-                if (d.co2 < minCo2) minCo2 = d.co2;
-                if (d.co2 > maxCo2) maxCo2 = d.co2;
+                if (d.co2   < minCo2)   minCo2   = d.co2;
+                if (d.co2   > maxCo2)   maxCo2   = d.co2;
             }
 
-            // Simple margins inside the canvas
-            var innerLeft = left + 60;          // a bit more room for y label
-            var innerRight = left + w - 20;
-            var innerTop = top + 30;
+            var innerLeft   = left + 60;
+            var innerRight  = left + w - 20;
+            var innerTop    = top + 30;
             var innerBottom = top + h - 50;
 
-            // --- 1. Draw axes ------------------------------------------------
+            // --- 1. User interaction: set / move threshold -----------------
+            // initialize threshold around "larger engines" if not set
+            if (engineThreshold === null ||
+                engineThreshold < minPower ||
+                engineThreshold > maxPower) {
+                engineThreshold = p.lerp(minPower, maxPower, 0.7);
+            }
+
+            // drag horizontally inside the plot area to move the line
+            if (p.mouseIsPressed &&
+                p.mouseX >= innerLeft && p.mouseX <= innerRight &&
+                p.mouseY >= innerTop && p.mouseY <= innerBottom) {
+
+                engineThreshold = p.map(p.mouseX, innerLeft, innerRight,
+                                        minPower, maxPower);
+            }
+
+            // --- 2. Axes ----------------------------------------------------
             p.stroke(0);
             p.strokeWeight(1);
+
             // y-axis
             p.line(innerLeft, innerTop, innerLeft, innerBottom);
             // x-axis
             p.line(innerLeft, innerBottom, innerRight, innerBottom);
 
-            // --- 2. Tick marks & numeric labels ------------------------------
-
+            // Ticks & labels
             p.textSize(10);
             p.fill(0);
             p.noStroke();
 
-            var xticks = 5;  // number of tick steps on x
+            var xticks = 5;
             for (var xi = 0; xi <= xticks; xi++) {
-                var t = xi / xticks;
-                var val = p.lerp(minPower, maxPower, t);
-                var xPos = p.map(val, minPower, maxPower, innerLeft, innerRight);
+                var t  = xi / xticks;
+                var xv = p.lerp(minPower, maxPower, t);
+                var xPos = p.map(xv, minPower, maxPower, innerLeft, innerRight);
 
-                // tick line
                 p.stroke(0);
                 p.line(xPos, innerBottom, xPos, innerBottom + 4);
 
-                // label
                 p.noStroke();
                 p.textAlign(p.CENTER, p.TOP);
-                p.text(Math.round(val), xPos, innerBottom + 6);
+                p.text(Math.round(xv), xPos, innerBottom + 6);
             }
 
             var yticks = 5;
             for (var yi = 0; yi <= yticks; yi++) {
                 var ty = yi / yticks;
-                var v = p.lerp(minCo2, maxCo2, ty);
-                var yPos = p.map(v, minCo2, maxCo2, innerBottom, innerTop);
+                var yv = p.lerp(minCo2, maxCo2, ty);
+                var yPos = p.map(yv, minCo2, maxCo2, innerBottom, innerTop);
 
-                // tick line
                 p.stroke(0);
                 p.line(innerLeft - 4, yPos, innerLeft, yPos);
 
-                // label
                 p.noStroke();
                 p.textAlign(p.RIGHT, p.CENTER);
-                p.text(Math.round(v), innerLeft - 6, yPos);
+                p.text(Math.round(yv), innerLeft - 6, yPos);
             }
 
-            // --- 3. Axis labels ----------------------------------------------
-
-            // x-axis label
+            // Axis labels
             p.textAlign(p.CENTER, p.TOP);
             p.textSize(12);
             p.text('Engine Size (cc)', (innerLeft + innerRight) / 2, innerBottom + 24);
 
-            // y-axis label (rotated)
             p.push();
             p.translate(left + 20, (innerTop + innerBottom) / 2);
             p.rotate(-Math.PI / 2);
@@ -99,23 +111,83 @@
             p.text('CO₂ NEDC (g/km)', 0, 0);
             p.pop();
 
-            // --- 4. Title ----------------------------------------------------
+            // Title
             p.textAlign(p.CENTER, p.BOTTOM);
             p.textSize(14);
             p.text('CO₂ Emissions vs Engine Size', left + w / 2, innerTop - 8);
 
-            // --- 5. Draw points ---------------------------------------------
-            p.noStroke();
-            p.fill(50, 120, 220, 150);
+            // --- 3. Draw points with threshold highlighting ----------------
+            var countAbove = 0;
+            var totalCo2   = 0;
+            var co2Above   = 0;
 
+            // First pass: dim points below threshold, count stats
+            p.noStroke();
             for (var j = 0; j < data.length; j++) {
                 var dpt = data[j];
                 var x = p.map(dpt.power, minPower, maxPower, innerLeft, innerRight);
-                var y = p.map(dpt.co2,  minCo2,  maxCo2,  innerBottom, innerTop);
-                p.circle(x, y, 3);
+                var y = p.map(dpt.co2,   minCo2,   maxCo2,   innerBottom, innerTop);
+
+                totalCo2 += dpt.co2;
+
+                if (dpt.power < engineThreshold) {
+                    // below threshold → gray + faint
+                    p.fill(120, 120, 120, 40);
+                    p.circle(x, y, 3);
+                } else {
+                    // above threshold → count and sum, will draw bright later
+                    countAbove++;
+                    co2Above += dpt.co2;
+                }
             }
 
+            // Second pass: bright points at/above threshold
+            p.noStroke();
+            p.fill(50, 120, 220, 180);
+            for (var k = 0; k < data.length; k++) {
+                var dp2 = data[k];
+                if (dp2.power < engineThreshold) continue;
 
+                var x2 = p.map(dp2.power, minPower, maxPower, innerLeft, innerRight);
+                var y2 = p.map(dp2.co2,   minCo2,   maxCo2,   innerBottom, innerTop);
+                p.circle(x2, y2, 3);
+            }
+
+            // --- 4. Draw the threshold line + label ------------------------
+            var thrX = p.map(engineThreshold, minPower, maxPower,
+                             innerLeft, innerRight);
+
+            p.stroke(0, 0, 0, 160);
+            p.strokeWeight(2);
+            p.line(thrX, innerTop, thrX, innerBottom);
+
+            var pctAboveCars = Math.round((countAbove / data.length) * 100);
+            var pctCo2Share  = totalCo2 > 0
+                ? Math.round((co2Above / totalCo2) * 100)
+                : 0;
+
+            var labelText =
+                'Big engines ≥ ' + Math.round(engineThreshold) + ' cc\n' +
+                pctAboveCars + '% of cars, ~' + pctCo2Share + '% of CO₂';
+
+            p.noStroke();
+            p.fill(255);
+            p.rectMode(p.CENTER);
+
+            // make the bubble wide enough for the two-line label
+            p.textSize(11);
+            var tw = p.textWidth('Big engines ≥ ' + Math.round(engineThreshold) + ' cc') + 24;
+            var rectW = Math.max(220, tw);
+            var rectH = 36;
+
+            p.rect(thrX, innerBottom + 40, rectW, rectH, 6);
+
+            p.fill(0);
+            p.textAlign(p.CENTER, p.CENTER);
+            p.text(labelText, thrX, innerBottom + 40);
+
+            // reset rect mode for other sketches
+            p.rectMode(p.CORNER);
         }
     };
 })();
