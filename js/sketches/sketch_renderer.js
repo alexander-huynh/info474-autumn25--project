@@ -57,16 +57,6 @@
 
 
 
-            if (ai === 7) {
-                window.VizScatter.draw(p, manager, ai, progress);
-                return;
-            }
-
-            // NEW: section 8 -> VizOutro
-            if (ai === 8) {
-                window.VizScatter2.draw(p, manager, ai, progress);
-                return;
-            }
 
             // NEW: section 8 -> VizOutro
             if (ai === 9) {
