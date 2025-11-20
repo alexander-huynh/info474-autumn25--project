@@ -1,11 +1,14 @@
 (function () {
     var currentAi = -1;
 
-    
-    // typing state
+    // typing + focus state
     var searchQuery = "";
     var searchHasRun = false;
     var lastResult = null;
+
+    var inputFocused = false;
+    var caretVisible = false;
+    var lastCaretToggle = 0;
 
     // dataset stats
     var statsInitialized = false;
@@ -129,20 +132,46 @@
         lastResult = candidates[0];
     }
 
-    // ---------- keyboard + canvas focus events ------------------------------------
+    // ---------- keyboard + focus handlers ------------------------------------
     function attachEventsOnce(p, manager) {
         if (eventsBound) return;
         eventsBound = true;
 
-        // ⭐ FIX: make canvas focusable so typing works
+        // Make canvas focusable
         p.mousePressed = function () {
             if (p._renderer && p._renderer.elt) {
                 p._renderer.elt.tabIndex = 0;
                 p._renderer.elt.focus();
             }
+
+            // compute input box bounds
+            var left = manager.offsetX || 0;
+            var top = manager.offsetY || 0;
+            var w = manager.width || 600;
+            var cardX = left + 20;
+            var cardY = top + 20;
+            var cardW = w - 40;
+
+            var inputX = cardX + 40;
+            var inputY = cardY + 80;
+            var inputW = cardW - 80;
+            var inputH = 26;
+
+            if (
+                p.mouseX >= inputX &&
+                p.mouseX <= inputX + inputW &&
+                p.mouseY >= inputY &&
+                p.mouseY <= inputY + inputH
+            ) {
+                inputFocused = true;
+            } else {
+                inputFocused = false;
+            }
         };
 
         p.keyTyped = function () {
+            if (!inputFocused) return;
+
             if (p.key.length === 1 && searchQuery.length < 30) {
                 var ch = p.key;
                 if (ch >= " " && ch <= "~") {
@@ -152,8 +181,12 @@
         };
 
         p.keyPressed = function () {
+            if (!inputFocused) return;
+
             if (p.keyCode === p.BACKSPACE) {
-                if (searchQuery.length > 0) searchQuery = searchQuery.slice(0, -1);
+                if (searchQuery.length > 0) {
+                    searchQuery = searchQuery.slice(0, -1);
+                }
                 return false;
             }
 
@@ -205,7 +238,7 @@
                 statsInitialized = true;
             }
 
-            // card
+            // card background
             var cardX = left + 20;
             var cardY = top + 20;
             var cardW = w - 40;
@@ -228,14 +261,21 @@
             p.text("Search car model (type and press Enter):",
                 cardX + 40, cardY + 60);
 
-            // fake input box
+            // ---- input box ----
             var inputX = cardX + 40;
             var inputY = cardY + 80;
             var inputW = cardW - 80;
             var inputH = 26;
 
-            p.stroke(160);
-            p.strokeWeight(1.5);
+            // focused outline
+            if (inputFocused) {
+                p.stroke(90);
+                p.strokeWeight(2);
+            } else {
+                p.stroke(160);
+                p.strokeWeight(1.5);
+            }
+
             p.fill(245);
             p.rect(inputX, inputY, inputW, inputH, 4);
 
@@ -245,20 +285,36 @@
 
             var displayText = searchQuery || "e.g., Prius, Golf, 3 Series";
             var placeholder = searchQuery.length === 0;
-            if (placeholder) p.fill(120);
+            if (placeholder && !inputFocused) p.fill(120);
+
             p.text(displayText, inputX + 8, inputY + inputH / 2);
 
-            // results area
+            // caret blinking
+            if (inputFocused) {
+                if (p.millis() - lastCaretToggle > 500) {
+                    caretVisible = !caretVisible;
+                    lastCaretToggle = p.millis();
+                }
+
+                if (caretVisible) {
+                    var caretX = inputX + 8 + p.textWidth(displayText);
+                    p.fill(0);
+                    p.rect(caretX + 2, inputY + 6, 2, inputH - 12);
+                }
+            }
+
+            // ---------------- results ------------------
             p.textAlign(p.LEFT, p.TOP);
             p.fill(0);
+
             var infoX = cardX + 40;
             var infoY = cardY + 120;
 
             if (!searchHasRun) {
                 p.text(
                     "Start typing the name of your car and press Enter.\n" +
-                    "We’ll search the EU emissions dataset and compare your car\n" +
-                    "to the dataset average in CO₂ and horsepower.",
+                    "We’ll look it up in the EU emissions dataset and show how it\n" +
+                    "compares to the average car in terms of CO₂ and horsepower.",
                     infoX, infoY
                 );
                 return;
@@ -267,13 +323,13 @@
             if (!lastResult) {
                 p.text(
                     "No matching cars found.\n" +
-                    "Try a simpler term (e.g. 'Golf', 'Prius', 'A4').",
+                    "Try a simpler search (e.g. 'Golf', 'Prius').",
                     infoX, infoY
                 );
                 return;
             }
 
-            // --- show matched car ---
+            // show match
             var car = lastResult;
             var lineY = infoY;
 
@@ -286,15 +342,13 @@
             p.textSize(12);
 
             var engText = isFinite(car.engine) ? car.engine.toFixed(0) + " cc" : "n/a";
-            p.text(
-                "Fuel: " + car.fuel + "    |    Engine: " + engText,
-                infoX, lineY
-            );
+            p.text("Fuel: " + car.fuel + "    |    Engine: " + engText,
+                infoX, lineY);
             lineY += 18;
 
             p.text(
-                "Your car – CO₂: " + car.co2.toFixed(0) + " g/km,  HP: " +
-                car.hp.toFixed(0),
+                "Your car – CO₂: " + car.co2.toFixed(0) +
+                " g/km,  HP: " + car.hp.toFixed(0),
                 infoX, lineY
             );
             lineY += 18;
@@ -312,13 +366,13 @@
 
                 var co2Phrase =
                     (Math.abs(dCo2) < 1) ? "about the same emissions as" :
-                        (dCo2 < 0 ? Math.abs(dCo2).toFixed(0) + " g/km lower CO₂ than" :
-                            dCo2.toFixed(0) + " g/km higher CO₂ than");
+                    (dCo2 < 0 ? Math.abs(dCo2).toFixed(0) + " g/km lower CO₂ than" :
+                                dCo2.toFixed(0) + " g/km higher CO₂ than");
 
                 var hpPhrase =
                     (Math.abs(dHp) < 1) ? "about the same power as" :
-                        (dHp > 0 ? dHp.toFixed(0) + " more HP than" :
-                            Math.abs(dHp).toFixed(0) + " less HP than");
+                    (dHp > 0 ? dHp.toFixed(0) + " more HP than" :
+                               Math.abs(dHp).toFixed(0) + " less HP than");
 
                 p.text(
                     "Interpretation: your car has " + co2Phrase +
@@ -328,7 +382,7 @@
                 );
             }
 
-            // --- bar chart for CO₂ comparison ---
+            // bar chart
             if (isFinite(avgCo2)) {
                 var barX = cardX + 40;
                 var barY = cardY + cardH - 70;
@@ -341,6 +395,7 @@
 
                 var maxScale = Math.max(avgCo2, car.co2) * 1.2;
 
+                // average
                 p.noStroke();
                 p.fill(190);
                 var avgLen = barW * (avgCo2 / maxScale);
@@ -348,6 +403,7 @@
                 p.fill(60);
                 p.text("Average", barX + avgLen + 6, barY - 2);
 
+                // your car
                 p.fill(80);
                 var carLen = barW * (car.co2 / maxScale);
                 p.rect(barX, barY + 18, carLen, barH, 3);
