@@ -39,21 +39,6 @@
                 return;
             }
 
-            if (ai === 5) {
-                window.VizFilterPanel.draw(p, manager, ai, progress);
-                return;
-            }
-
-            if (ai === 6) {
-                window.VizSearchCar.draw(p, manager, ai, progress);
-                return;
-            }
-
-            if (ai === 1) { // Fuel Type vs CO2
-                window.VizBar3.draw(p, manager, ai, progress);
-                return;
-            }
-
             if (ai === 2) { // Engine Size vs CO2
                 window.VizScatter.draw(p, manager, ai, progress);
                 return;
@@ -64,18 +49,13 @@
                 return;
             }
 
-
             if (ai === 4) { // Engine Size vs CO2
                 window.VizBar2.draw(p, manager, ai, progress);
                 return;
             }
 
-
-
-
-            // NEW: section 8 -> VizOutro
-            if (ai === 8) {
-                window.VizBar3.draw(p, manager, ai, progress);
+            if (ai === 5) {
+                window.VizFilterPanel.draw(p, manager, ai, progress);
                 return;
             }
 
@@ -83,6 +63,7 @@
                 window.VizSearchCar.draw(p, manager, ai, progress);
                 return;
             }
+
 
         }
     };

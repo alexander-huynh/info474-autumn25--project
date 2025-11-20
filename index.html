@@ -9,89 +9,99 @@
 
 <body>
   <div class="container">
-    <div id='graphic'>
-      <div id='sections'>
+    <div id="graphic">
+      <div id="sections">
+
+        <!-- 0 -->
         <section class="step" data-active-index="0">
           <div class="title">Not All Cars Pollute Equally</div>
-          Every car leaves some CO₂ behind—but not all of them leave the same trail. Some sip fuel, others burn through
-          it. This walkthrough breaks down why that happens, and where your own car fits in.
-
+          Every car produces CO₂, but not all of them pollute the same. Some barely sip fuel, others burn through it fast.
+          This walkthrough breaks down why those differences exist—and where your own car fits in.
           <img src="img/car_emissions.jpeg" alt="Illustration of cars with exhaust fumes" class="section-image" />
-
         </section>
+
+        <!-- 1 -->
         <section class="step" data-active-index="1">
           <div class="title">Step 1 — Fuel Types: Where Emissions Begin</div>
-          First stop: fuel. Petrol, diesel; they don’t behave the same once you burn them. This view shows how much CO₂
-          comes from each type so you can see the impact of what goes into the tank.
+          First stop: fuel. Petrol and diesel don’t burn the same, and it shows in their emissions.
+          This section shows how CO₂ output shifts depending on what goes into the tank.
         </section>
+
+        <!-- 2 -->
         <section class="step" data-active-index="2">
           <div class="title">Step 2 — Engine Size: Bigger Engines, Bigger Emissions</div>
-          Fuel isn’t everything. Engine size plays a big role too. Bigger engines usually mean more CO₂. This section
-          lets you zoom in on different engine sizes to see the pattern and the exceptions.
+          Engine size matters. Bigger displacement typically means more CO₂.
+          This section lets you explore the trend and see where the outliers land.
         </section>
+
+        <!-- 3 -->
         <section class="step" data-active-index="3">
           <div class="title">Step 3 — Horsepower: Performance vs. Environmental Cost</div>
-          More power usually means more emissions. This view links horsepower to CO₂ so you can check out which high-HP
-          cars stay efficient, and which ones trade speed for a bigger carbon footprint. <section class="step"
-            data-active-index="4">
-            <div class="title">Step 4 — Manufacturer Personality: Who Builds Clean, Who Doesn’t?</div>
-            Brands have habits. Some consistently build cleaner cars, others… not so much. This plot shows the average
-            CO₂ of each manufacturer, and clicking a name highlights what their lineup looks like overall.
-          </section>
-          <section class="step" data-active-index="5">
-            <div class="title">Step 5 — Find Your Balance: Performance, Price, and CO₂</div>
-            By now you’ve seen the big factors. Here you can mix and match them yourself. Adjust CO₂, horsepower, price,
-            and fuel type to see which cars match what you care about.
-          </section>
-          <div id="extra-space">
-          </div>
-          <section class="step" data-active-index="6">
-            <div class="title">Step 6 — Search Your Own Car: Where Do You Stand?</div>
-            Time to check your actual car. Type in the model and see how it stacks up against thousands of others. Maybe
-            it’s cleaner than it feels… or maybe the numbers tell a different story.
-          </section>
-          <section class="step" data-active-index="7">
-            <div class="title">What the Data Says About “Normal” Cars</div>
-            When you pull back, the trends are pretty clear: fuel, engine size, horsepower, and brand choices add up.
-            Most cars fall into a pretty predictable band, but there are definite ways to land above or below it.
-          </section>
-          <section class="step" data-active-index="8">
-            <div class="title">About This Dataset</div>
-            These visuals use EU vehicle registration and emissions data, paired with specs like engine size,
-            horsepower, fuel type, and price. Values are simplified for clarity; they’re meant for exploration, not
-            official reporting.
-          </section>
-          <section class="step" data-active-index="9">
-            <div class="title">Where You Go From Here</div>
-            This walkthrough won’t tell you what to buy. It just makes the climate cost of each option clearer. Take it
-            with you when you’re comparing cars, or just use it to see the road a little differently.
-          </section>
+          More power usually means more emissions. This view connects horsepower to CO₂ so you can spot which performance cars stay efficient and which ones trade power for pollution.
+        </section>
+
+        <!-- 4 -->
+        <section class="step" data-active-index="4">
+          <div class="title">Step 4 — Manufacturer Personality: Who Builds Clean, Who Doesn’t?</div>
+          Different brands have different tendencies. Some consistently build lower-emission cars, while others lean the opposite way. This chart shows where each manufacturer stands on average.
+        </section>
+
+        <!-- 5 -->
+        <section class="step" data-active-index="5">
+          <div class="title">Step 5 — Find Your Balance: Performance, Price, and CO₂</div>
+          Mix and match the factors yourself. Adjust CO₂, horsepower, price range, and fuel type,
+          and see which cars best match your personal priorities.
+        </section>
+
+        <!-- 6 -->
+        <section class="step" data-active-index="6">
+          <div class="title">Step 6 — Search Your Own Car: Where Do You Stand?</div>
+          Curious how your current car compares? Type it in and see how it stacks up against thousands of other models in the dataset.
+        </section>
+
+        <!-- 7 -->
+        <section class="step" data-active-index="7">
+          <div class="title">What the Data Says About “Normal” Cars</div>
+          Stepping back, you’ll notice patterns: fuel, engine size, horsepower, and brand strategy all influence emissions. Most cars cluster in the middle, but you’ve now seen what pushes them higher or lower.
+        </section>
+
+        <!-- 8 -->
+        <section class="step" data-active-index="8">
+          <div class="title">About This Dataset</div>
+          These visuals use EU vehicle registration + emissions data, along with specs like engine size, horsepower, fuel type, and price. Values are simplified for clarity—they’re for exploration, not regulation.
+        </section>
+
+        <!-- 9 -->
+        <section class="step" data-active-index="9">
+          <div class="title">Where You Go From Here</div>
+          This walkthrough isn’t here to tell you what to buy. It’s here to make the climate cost visible.
+          Take the insights with you, whether you’re car shopping or just looking at the road differently.
+        </section>
+
       </div>
-      <div id='vis' class='vis-hidden'>
-      </div>
-      <div id="extra-space">
-      </div>
+
+      <div id="vis" class="vis-hidden"></div>
+
+      <div id="extra-space"></div>
     </div>
   </div>
 
-
   <!-- p5.js (using CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/p5@1.6.0/lib/p5.min.js"></script>
-  <!-- helpers (data/loading, scroller, visual controller) -->
+
+  <!-- helpers -->
   <script src="js/helpers/data_loader.js"></script>
   <script src="js/helpers/scroller.js"></script>
   <script src="js/helpers/visual_controller.js"></script>
-
-  <!-- orchestrator (wires scroller -> sketch) -->
   <script src="js/helpers/sections.js"></script>
 
-  <!-- sketches (manager) -->
+  <!-- sketch manager -->
   <script src="js/sketches/sketch_manager.js"></script>
 
-  <!-- sketches (example renderer) -->
+  <!-- example -->
   <script src="js/sketches/examples/sketch_grid.js"></script>
 
-  <!-- sketches (renderers): UPDATE HERE FOR PROJECT -->
+  <!-- your visuals -->
   <script src="js/sketches/viz/default_viz_title.js"></script>
   <script src="js/sketches/viz/viz_co2_v_enginepower.js"></script>
   <script src="js/sketches/viz/viz_co2_v_enginesize.js"></script>
@@ -99,12 +109,11 @@
   <script src="js/sketches/viz/viz_fueltype_v_co2.js"></script>
   <script src="js/sketches/viz/viz_manufacturer_v_co2.js"></script>
   <script src="js/sketches/viz/sketch7.js"></script>
-  <script src="js/sketches/viz/viz_fueltype_v_co2.js"></script>
   <script src="js/sketches/viz/viz_fueltypes_1.js"></script>
   <script src="js/sketches/viz/viz_filter_6.js"></script>
 
+  <!-- renderer -->
   <script src="js/sketches/sketch_renderer.js"></script>
-
 
 </body>
 
