@@ -102,3 +102,6 @@
   object-fit: cover;      /* crop a bit instead of distorting if tall */
 }
 
+body {
+  background-color: #C7F2C0 !important;
+}
