@@ -55,7 +55,7 @@
 
                 for (var i = 0; i < data.length; i++) {
                     var row = data[i];
-                    var manu = row.manufacturer_name_eu;
+                    var manu = row.make;
                     var co2 = parseFloat(row.co2_nedc_gpkm);
 
                     if (!manu || manu.trim() === "") continue;
