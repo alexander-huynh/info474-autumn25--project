@@ -3,21 +3,33 @@
 (function () {
 
     // ---------------------------------------------------------
-    // PROMPT A ADDITIONS — global arrays for hover later
+    // Hover storage
     // ---------------------------------------------------------
-    var screenPts   = [];   // stores on-screen positions of each dot
-    var hoverIndex  = -1;   // index of hovered point (used in B/C)
+    var screenPts   = [];
+    var hoverIndex  = -1;
+
     // ---------------------------------------------------------
+    // Fuel filter buttons (same as power scatter)
+    // ---------------------------------------------------------
+    var btns = [
+        { label: "All",    mode: "All",    x: 0, y: 0, w: 60, h: 24 },
+        { label: "Petrol", mode: "Petrol", x: 0, y: 0, w: 70, h: 24 },
+        { label: "Diesel", mode: "Diesel", x: 0, y: 0, w: 70, h: 24 }
+    ];
 
     window.VizScatter = {
+
+        //------------------------------------------------------------------
+        // DRAW
+        //------------------------------------------------------------------
         draw: function (p, manager, ai, progress) {
+
             var data = manager.data || [];
             var left = manager.offsetX || 0;
             var top = manager.offsetY || 0;
             var w = manager.width || 600;
             var h = manager.height || 520;
 
-            // reset storage each frame
             screenPts  = [];
             hoverIndex = -1;
 
@@ -31,18 +43,61 @@
                 return;
             }
 
-            // --- 0. Min/max for scaling ------------------------------------
-            var rawMin = Infinity, rawMax = -Infinity;
+            // -------------------------------------------------------------
+            // Extract fields + fuel type
+            // -------------------------------------------------------------
+            var pts = [];
+            for (var i = 0; i < data.length; i++) {
+                var row = data[i];
+
+                var co2  = parseFloat(row.co2);
+                var eng  = parseFloat(row.power);
+                if (isNaN(co2) || isNaN(eng)) continue;
+
+                var rawFuel = (
+                    row.fuel_type ||
+                    row.fuel ||
+                    row.fueltype ||
+                    row.fuelType ||
+                    ""
+                ).toString().toLowerCase();
+
+                var fuel = "Diesel";
+                if (rawFuel.includes("petrol") || rawFuel.includes("gasoline")) fuel = "Petrol";
+                if (rawFuel.includes("diesel"))                               fuel = "Diesel";
+
+                pts.push({ co2: co2, power: eng, fuel: fuel });
+            }
+
+            // -------------------------------------------------------------
+            // Apply fuel filter
+            // -------------------------------------------------------------
+            var mode = manager.fuelFilter || "All";
+            if (mode === "Petrol") pts = pts.filter(d => d.fuel === "Petrol");
+            if (mode === "Diesel") pts = pts.filter(d => d.fuel === "Diesel");
+
+            if (!pts.length) {
+                p.fill(0);
+                p.textAlign(p.CENTER, p.CENTER);
+                p.textSize(16);
+                p.text('No vehicles match this filter.', left + w / 2, top + h / 2);
+                return;
+            }
+
+            // -------------------------------------------------------------
+            // Min/max
+            // -------------------------------------------------------------
             var minCo2 = 80;
             var maxCo2 = 380;
 
-            for (var i = 0; i < data.length; i++) {
-                var d = data[i];
+            var rawMin = Infinity, rawMax = -Infinity;
+            for (var i = 0; i < pts.length; i++) {
+                var d = pts[i];
                 if (d.power < rawMin) rawMin = d.power;
                 if (d.power > rawMax) rawMax = d.power;
             }
 
-            // --- CROPPED DOMAIN --------------------------------------------
+            // Cropped domain
             var minPower = 900;
             var maxPower = 5000;
 
@@ -50,13 +105,15 @@
                 return Math.max(lo, Math.min(hi, v));
             }
 
-            // Padding
+            // Layout
             var innerLeft   = left + 60;
             var innerRight  = left + w - 20;
             var innerTop    = top + 60;
             var innerBottom = top + h - 50;
 
-            // --- 1. Background gridlines -----------------------------------
+            // -------------------------------------------------------------
+            // Gridlines
+            // -------------------------------------------------------------
             p.stroke(220);
             p.strokeWeight(1);
 
@@ -75,13 +132,17 @@
                 p.line(innerLeft, yPos, innerRight, yPos);
             }
 
-            // --- 2. Axes ----------------------------------------------------
+            // -------------------------------------------------------------
+            // Axes
+            // -------------------------------------------------------------
             p.stroke(0);
             p.strokeWeight(1);
             p.line(innerLeft, innerTop, innerLeft, innerBottom);
             p.line(innerLeft, innerBottom, innerRight, innerBottom);
 
-            // --- 3. Tick marks + labels ------------------------------------
+            // -------------------------------------------------------------
+            // Tick labels
+            // -------------------------------------------------------------
             p.textSize(10);
             p.fill(0);
             p.noStroke();
@@ -112,7 +173,9 @@
                 p.text(yv, innerLeft - 6, yPos);
             }
 
-            // --- 4. Axis labels ---------------------------------------------
+            // -------------------------------------------------------------
+            // Axis labels
+            // -------------------------------------------------------------
             p.textAlign(p.CENTER, p.TOP);
             p.textSize(12);
             p.text('Engine Size (L)', (innerLeft + innerRight) / 2, innerBottom + 28);
@@ -124,17 +187,51 @@
             p.text('CO₂ NEDC (g/km)', 0, 0);
             p.pop();
 
-            // --- 5. Title ----------------------------------------------------
+            // -------------------------------------------------------------
+            // Title
+            // -------------------------------------------------------------
             p.textAlign(p.CENTER, p.BOTTOM);
             p.textSize(14);
             p.text('CO₂ Emissions vs Engine Size', left + w / 2, innerTop - 28);
 
-            // --- 6. Draw points + store screen coords ----------------------
+            // -------------------------------------------------------------
+            // Fuel Filter Buttons
+            // -------------------------------------------------------------
+            var btnY = innerTop + 10;
+            var activeMode = mode;
+
+            var totalW = btns[0].w + btns[1].w + btns[2].w + 20 + 20;
+            var startX = left + (w - totalW) / 2;
+
+            for (var bi = 0; bi < btns.length; bi++) {
+                var b = btns[bi];
+                var bx = startX + bi * (b.w + 20);
+
+                b.x = bx;
+                b.y = btnY;
+
+                // background
+                if (activeMode === b.mode) p.fill(40, 110, 220);
+                else                      p.fill(230);
+
+                p.stroke(0, 60);
+                p.rect(bx, btnY, b.w, b.h, 4);
+
+                // label
+                p.fill(activeMode === b.mode ? 255 : 0);
+                p.textAlign(p.CENTER, p.CENTER);
+                p.textSize(12);
+                p.text(b.label, bx + b.w / 2, btnY + b.h / 2);
+            }
+
+            // -------------------------------------------------------------
+            // Draw points + record screen coords
+            // -------------------------------------------------------------
             p.noStroke();
             p.fill(100, 100, 100, 120);
 
-            for (var j = 0; j < data.length; j++) {
-                var dpt = data[j];
+            for (var j = 0; j < pts.length; j++) {
+                var dpt = pts[j];
                 var eng = clamp(dpt.power, minPower, maxPower);
 
                 var x = p.map(eng, minPower, maxPower, innerLeft, innerRight);
@@ -151,7 +248,7 @@
             }
 
             // -------------------------------------------------------------
-            // PROMPT B — Hover detection + highlight
+            // Hover highlight
             // -------------------------------------------------------------
             var mx = p.mouseX;
             var my = p.mouseY;
@@ -177,7 +274,7 @@
             }
 
             // -------------------------------------------------------------
-            // PROMPT C — Tooltip box
+            // Tooltip
             // -------------------------------------------------------------
             if (hoverIndex !== -1) {
                 var tt = screenPts[hoverIndex];
@@ -188,28 +285,26 @@
                 var bx = mx + 12;
                 var by = my - boxH - 8;
 
-                // Clamp inside canvas
                 if (bx + boxW > left + w)  bx = left + w - boxW - 5;
                 if (by < top)              by = my + 12;
 
-                // shadow
                 p.noStroke();
                 p.fill(0, 60);
                 p.rect(bx + 2, by + 2, boxW, boxH, 6);
 
-                // tooltip background
                 p.fill(250);
                 p.rect(bx, by, boxW, boxH, 6);
 
-                // text
                 p.fill(0);
-                p.textAlign(p.LEFT, p.TOP);
                 p.textSize(11);
+                p.textAlign(p.LEFT, p.TOP);
                 p.text("Engine: " + tt.liters.toFixed(1) + "L", bx + pad, by + 6);
-                p.text("CO₂: " + tt.co2 + " g/km",      bx + pad, by + 20);
+                p.text("CO₂: " + tt.co2 + " g/km",          bx + pad, by + 20);
             }
 
-            // --- 7. CAR TYPE ICONS -----------------------------------------
+            // -------------------------------------------------------------
+            // Car type icons
+            // -------------------------------------------------------------
             p.stroke(180);
             p.strokeWeight(1);
             var iconBaselineY = innerBottom + 22;
@@ -240,7 +335,9 @@
             drawEmoji("🚙", xMedium, iconY);
             drawEmoji("🚐", xLarge,  iconY);
 
-            // --- 8. LEGEND --------------------------------------------------
+            // -------------------------------------------------------------
+            // Legend
+            // -------------------------------------------------------------
             p.textSize(11);
             p.fill(60);
             p.textAlign(p.LEFT, p.TOP);
@@ -249,19 +346,40 @@
             var legendY = innerTop + 4;
             var legendSpacing = 16;
 
-            p.text("🚗 Small cars (1.2–1.6L)", legendX, legendY);
+            p.text("🚗 Small cars (1.2–1.6L)",          legendX, legendY);
             p.text("🚙 Sedans / crossovers (2.0–2.5L)", legendX, legendY + legendSpacing);
-            p.text("🚐 Large SUVs / vans (3.0–4.0L)", legendX, legendY + legendSpacing * 2);
+            p.text("🚐 Large SUVs / vans (3.0–4.0L)",    legendX, legendY + legendSpacing * 2);
 
-            // --- 9. CAPTION -------------------------------------------------
+            // -------------------------------------------------------------
+            // Caption
+            // -------------------------------------------------------------
             p.textSize(11);
             p.fill(120);
             p.textAlign(p.CENTER, p.TOP);
-            p.text(
-                "Data source: European Vehicle CO₂ Dataset (NEDC)",
-                left + w / 2,
-                top + h - 5
-            );
+            p.text("Data source: European Vehicle CO₂ Dataset (NEDC)",
+                   left + w / 2, top + h - 5);
+        },
+
+        //------------------------------------------------------------------
+        // CLICK HANDLER (Fuel filter buttons)
+        //------------------------------------------------------------------
+        mousePressed: function (p, manager) {
+            var mx = p.mouseX;
+            var my = p.mouseY;
+
+            for (var bi = 0; bi < btns.length; bi++) {
+                var b = btns[bi];
+                if (
+                    mx >= b.x && mx <= b.x + b.w &&
+                    my >= b.y && my <= b.y + b.h
+                ) {
+                    manager.fuelFilter = b.mode;
+                    return true;
+                }
+            }
+
+            return false;
         }
     };
+
 })();
