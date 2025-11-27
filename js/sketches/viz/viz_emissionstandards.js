@@ -4,6 +4,16 @@
 
     window.VizCountry = {
 
+        COUNTRY_NAMES: {
+            AT: "Austria", BE: "Belgium", BG: "Bulgaria", CY: "Cyprus", CZ: "Czechia",
+            DE: "Germany", DK: "Denmark", EE: "Estonia", EL: "Greece", ES: "Spain",
+            FI: "Finland", FR: "France", HR: "Croatia", HU: "Hungary", IE: "Ireland",
+            IT: "Italy", LT: "Lithuania", LU: "Luxembourg", LV: "Latvia", MT: "Malta",
+            NL: "Netherlands", PL: "Poland", PT: "Portugal", RO: "Romania", SE: "Sweden",
+            SI: "Slovenia", SK: "Slovakia"
+        },
+
+
         sortMode: "co2",   // co2 | alpha
 
         cycleSort: function () {
@@ -45,16 +55,24 @@
             if (!manager._countryBars || window._vizcountry_needsRecalc) {
                 window._vizcountry_needsRecalc = false;
 
-                // aggregate: { FR: { sum: X, count: Y }, BE: {...}, ... }
+                // whitelist of valid country codes in your dataset
+                const VALID_MS = new Set([
+                    "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "EL", "ES",
+                    "FI", "FR", "HR", "HU", "IE", "IT", "LT", "LU", "LV", "MT",
+                    "NL", "PL", "PT", "RO", "SE", "SI", "SK"
+                ]);
+
+
+
                 let agg = {};
 
                 for (let i = 0; i < manager.data.length; i++) {
                     let row = manager.data[i];
 
-                    let country = (row.member_state || "").toString().trim();
+                    let country = (row.member_state || "").toString().trim().toUpperCase();
                     let co2 = parseFloat(row.co2_nedc_gpkm);
 
-                    if (!country) continue;
+                    if (!VALID_MS.has(country)) continue;   // ⬅️  REAL FILTER APPLIED
                     if (isNaN(co2)) continue;
 
                     if (!agg[country]) agg[country] = { sum: 0, count: 0 };
@@ -62,10 +80,9 @@
                     agg[country].count += 1;
                 }
 
-                // convert to array
                 let arr = [];
+
                 for (let k in agg) {
-                    // require at least 5 datapoints to avoid noise
                     if (agg[k].count >= 5) {
                         arr.push({
                             name: k,
@@ -74,7 +91,6 @@
                     }
                 }
 
-                // sort based on current mode
                 if (this.sortMode === "co2") {
                     arr.sort((a, b) => b.avg - a.avg);
                 } else {
@@ -143,7 +159,9 @@
 
                 p.fill(30);
                 p.textAlign(p.LEFT, p.CENTER);
-                p.text(r.name, left, y);
+                p.text(window.VizCountry.COUNTRY_NAMES[r.name] || r.name, left, y);
+
+
 
                 var bw2 = (r.avg / maxAvg) * barMaxW;
                 var bx2 = left + 120;
