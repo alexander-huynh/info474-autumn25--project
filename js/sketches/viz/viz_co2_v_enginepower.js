@@ -198,7 +198,7 @@
       //------------------------------------------------------------------
       // PROMPT 4 — BUTTON DRAWING
       //------------------------------------------------------------------
-      var btnY = innerTop - 54;
+      var btnY = innerTop + 10;
       var activeMode = manager.fuelFilter || "All";
 
       var totalW = btns[0].w + btns[1].w + btns[2].w + 20 + 20;
