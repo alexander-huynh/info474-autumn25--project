@@ -64,6 +64,11 @@
                 return;
             }
 
+            if (ai === 7) {
+                window.VizCountry.draw(p, manager, ai, progress);
+                return;
+            }
+
 
         }
     };
