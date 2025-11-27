@@ -145,7 +145,7 @@
 
             p.textSize(11);
             p.textAlign(p.CENTER, p.TOP);
-            p.text("Computed from dataset (NEDC values)", left + availW/2, top + 4);
+            p.text("Average CO₂ Emissions by Member State", left + availW/2, top + 4);
 
             // --------------------------------------------------------
             // Bars
