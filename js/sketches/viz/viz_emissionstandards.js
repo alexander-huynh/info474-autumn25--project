@@ -2,22 +2,6 @@
 // Average CO₂ emissions by country (horizontal bar chart)
 (function () {
 
-    // ------------------------------------------
-    // Mock data – replace later with real dataset
-    // ------------------------------------------
-    const MOCK_COUNTRY_DATA = [
-        { country: "Germany",      co2: 145 },
-        { country: "France",       co2: 132 },
-        { country: "UK",           co2: 138 },
-        { country: "Italy",        co2: 150 },
-        { country: "Spain",        co2: 129 },
-        { country: "Sweden",       co2: 118 },
-        { country: "Norway",       co2: 105 },
-        { country: "Netherlands",  co2: 121 },
-        { country: "Poland",       co2: 160 },
-        { country: "Czechia",      co2: 154 }
-    ];
-
     window.VizCountry = {
 
         sortMode: "co2",   // co2 | alpha
@@ -56,20 +40,45 @@
             }
 
             // --------------------------------------------------------
-            // Build + sort dataset (cached unless sort changed)
+            // BUILD + SORT DATASET FROM REAL member_state VALUES
             // --------------------------------------------------------
             if (!manager._countryBars || window._vizcountry_needsRecalc) {
                 window._vizcountry_needsRecalc = false;
 
-                let arr = MOCK_COUNTRY_DATA.map(r => ({
-                    name: r.country,
-                    avg:  r.co2
-                }));
+                // aggregate: { FR: { sum: X, count: Y }, BE: {...}, ... }
+                let agg = {};
 
+                for (let i = 0; i < manager.data.length; i++) {
+                    let row = manager.data[i];
+
+                    let country = (row.member_state || "").toString().trim();
+                    let co2 = parseFloat(row.co2_nedc_gpkm);
+
+                    if (!country) continue;
+                    if (isNaN(co2)) continue;
+
+                    if (!agg[country]) agg[country] = { sum: 0, count: 0 };
+                    agg[country].sum += co2;
+                    agg[country].count += 1;
+                }
+
+                // convert to array
+                let arr = [];
+                for (let k in agg) {
+                    // require at least 5 datapoints to avoid noise
+                    if (agg[k].count >= 5) {
+                        arr.push({
+                            name: k,
+                            avg: agg[k].sum / agg[k].count
+                        });
+                    }
+                }
+
+                // sort based on current mode
                 if (this.sortMode === "co2") {
-                    arr.sort((a,b) => b.avg - a.avg);
+                    arr.sort((a, b) => b.avg - a.avg);
                 } else {
-                    arr.sort((a,b) => a.name.localeCompare(b.name));
+                    arr.sort((a, b) => a.name.localeCompare(b.name));
                 }
 
                 manager._countryBars = arr;
@@ -80,7 +89,7 @@
             // scaling
             var maxAvg = Math.max(...bars.map(d => d.avg));
 
-            var rowH = availH / bars.length;
+            var rowH = bars.length > 0 ? (availH / bars.length) : 20;
             var barMaxW = availW - 150;
 
             p.push();
@@ -116,11 +125,11 @@
             // --------------------------------------------------------
             p.textAlign(p.CENTER, p.BOTTOM);
             p.textSize(14);
-            p.text("Average CO₂ Emissions by Country", left + availW/2, top - 4);
+            p.text("Average CO₂ Emissions by Member State", left + availW/2, top - 4);
 
             p.textSize(11);
             p.textAlign(p.CENTER, p.TOP);
-            p.text("Emission Standards Data (currently seeking dataset)", left + availW/2, top + 4);
+            p.text("Computed from dataset (NEDC values)", left + availW/2, top + 4);
 
             // --------------------------------------------------------
             // Bars
