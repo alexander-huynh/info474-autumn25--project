@@ -1,7 +1,7 @@
 (function () {
     var currentAi = -1;
 
-    // Slider state (CO2 + HP use fixed, forgiving ranges)
+    // Slider state (CO2 + HP)
     var co2Slider = {
         min: 0,
         max: 260,
@@ -16,22 +16,7 @@
         bounds: null
     };
 
-    // Price range will be inferred from synthetic prices once
-    var priceSlider = {
-        min: 0,
-        max: 100000,
-        value: 100000,
-        bounds: null
-    };
-    var priceRangeInitialized = false;
-
-    var fuelOptions = ["Any", "Petrol", "Diesel"];
-    var selectedFuelIndex = 0;
-    var fuelButtons = [];
-
-    var eventsBound = false;
-
-    // -------- generic numeric field helper ---------------------------------
+    // We keep getPrice for display only, but no price slider/filter now
     function getNumericFromKeys(d, keys) {
         for (var i = 0; i < keys.length; i++) {
             var k = keys[i];
@@ -62,9 +47,8 @@
         ]);
     }
 
-    // Synthetic price if no real price column exists
+    // Synthetic price if no real price column exists (for display only)
     function getPrice(d) {
-        // 1) If you ever add a real price column, it will be used
         var direct = getNumericFromKeys(d, [
             "price",
             "price_eur",
@@ -73,12 +57,11 @@
         ]);
         if (isFinite(direct)) return direct;
 
-        // 2) Otherwise compute a made-up price from HP + CO2
         var hp = getHP(d);
         var co2 = getCo2(d);
         if (!isFinite(hp) && !isFinite(co2)) return NaN;
 
-        var base = 15000; // base price
+        var base = 15000;
         var hpComponent = isFinite(hp) ? hp * 80 : 0;
         var co2Component = isFinite(co2) ? co2 * 20 : 0;
         return base + hpComponent + co2Component;
@@ -118,13 +101,19 @@
         return "Unknown make";
     }
 
+    var fuelOptions = ["Any", "Petrol", "Diesel"];
+    var selectedFuelIndex = 0;
+    var fuelButtons = [];
+
+    var eventsBound = false;
+
     // -----------------------------------------------------------------------
     function attachEventsOnce(p) {
         if (eventsBound) return;
         eventsBound = true;
 
         p.mousePressed = function () {
-            if (currentAi !== 5) return;  
+            if (currentAi !== 5) return;
 
             var mx = p.mouseX;
             var my = p.mouseY;
@@ -146,17 +135,6 @@
                     var th = (mx - hb.x1) / (hb.x2 - hb.x1);
                     th = Math.max(0, Math.min(1, th));
                     hpSlider.value = hpSlider.min + th * (hpSlider.max - hpSlider.min);
-                }
-            }
-
-            // Price slider
-            if (priceSlider.bounds) {
-                var pb = priceSlider.bounds;
-                if (my >= pb.y - 8 && my <= pb.y + 8 && mx >= pb.x1 && mx <= pb.x2) {
-                    var tp = (mx - pb.x1) / (pb.x2 - pb.x1);
-                    tp = Math.max(0, Math.min(1, tp));
-                    priceSlider.value =
-                        priceSlider.min + tp * (priceSlider.max - priceSlider.min);
                 }
             }
 
@@ -193,78 +171,54 @@
                 return;
             }
 
-            // Initialize price range from synthetic prices once
-            if (!priceRangeInitialized) {
-                var minP = Infinity, maxP = -Infinity;
-                for (var i = 0; i < data.length; i++) {
-                    var pr = getPrice(data[i]);
-                    if (!isFinite(pr)) continue;
-                    if (pr < minP) minP = pr;
-                    if (pr > maxP) maxP = pr;
-                }
-                if (!isFinite(minP) || !isFinite(maxP) || minP === maxP) {
-                    minP = 10000;
-                    maxP = 150000;
-                }
-                priceSlider.min = minP;
-                priceSlider.max = maxP;
-                priceSlider.value = maxP; // default: no effective cap
-                priceRangeInitialized = true;
-            }
-
             // ---- Card ------------------------------------------------------
             var cardX = left + 20;
             var cardY = top + 20;
             var cardW = w - 40;
             var cardH = h - 40;
 
-            p.noStroke();
-            p.fill(230);
+            // white card, light border
+            p.stroke(220);
+            p.strokeWeight(1);
+            p.fill(255);
             p.rect(cardX, cardY, cardW, cardH, 6);
 
-            // Title
+            // Title + subtitle
             p.fill(0);
             p.textAlign(p.LEFT, p.TOP);
             p.textSize(14);
-            p.text("Visual 6 – Find a Car That Fits Your Values",
-                   cardX + 12, cardY + 10);
+            p.text("Find a Car That Fits Your Values", cardX + 12, cardY + 10);
 
-            p.textSize(12);
-            p.textAlign(p.LEFT, p.TOP);
+            p.textSize(11);
+            p.fill(90);
+            p.text("Filter by CO\u2082, power, and fuel type.", cardX + 12, cardY + 30);
 
             // ---- Slider geometry -------------------------------------------
             var sliderX1 = cardX + 40;
-            var sliderX2 = cardX + 260;
+            var sliderX2 = cardX + 280;
             var co2Y    = cardY + 80;
             var hpY     = cardY + 130;
-            var priceY  = cardY + 180;
 
-            co2Slider.bounds   = { x1: sliderX1, x2: sliderX2, y: co2Y };
-            hpSlider.bounds    = { x1: sliderX1, x2: sliderX2, y: hpY };
-            priceSlider.bounds = { x1: sliderX1, x2: sliderX2, y: priceY };
+            co2Slider.bounds = { x1: sliderX1, x2: sliderX2, y: co2Y };
+            hpSlider.bounds  = { x1: sliderX1, x2: sliderX2, y: hpY };
 
             // Labels
             p.fill(0);
+            p.textAlign(p.LEFT, p.TOP);
+            p.textSize(12);
             p.text("Max CO\u2082 (g/km): " + co2Slider.value.toFixed(0),
-                   cardX + 40, cardY + 60);
+                   cardX + 40, cardY + 64);
             p.text("Min horsepower: " + hpSlider.value.toFixed(0),
-                   cardX + 40, cardY + 110);
-
-            var priceLabel = "Max price: ";
-            var pv = priceSlider.value;
-            if (pv >= 1000) {
-                priceLabel += "\u20ac" + (pv / 1000).toFixed(1) + "k";
-            } else {
-                priceLabel += "\u20ac" + pv.toFixed(0);
-            }
-            p.text(priceLabel, cardX + 40, cardY + 160);
+                   cardX + 40, cardY + 114);
 
             // ---- Draw sliders ----------------------------------------------
             function drawSlider(slider, y) {
-                p.stroke(160);
+                // track
+                p.stroke(210);
                 p.strokeWeight(3);
                 p.line(sliderX1, y, sliderX2, y);
 
+                // handle
                 var t = (slider.value - slider.min) / (slider.max - slider.min);
                 t = Math.max(0, Math.min(1, t));
                 var hx = sliderX1 + t * (sliderX2 - sliderX1);
@@ -272,23 +226,23 @@
                 p.noStroke();
                 p.fill(255);
                 p.circle(hx, y, 12);
-                p.stroke(120);
+                p.stroke(40, 120, 200);
                 p.noFill();
                 p.circle(hx, y, 12);
             }
 
-            drawSlider(co2Slider,   co2Y);
-            drawSlider(hpSlider,    hpY);
-            drawSlider(priceSlider, priceY);
+            drawSlider(co2Slider, co2Y);
+            drawSlider(hpSlider,  hpY);
 
             // ---- Fuel buttons ----------------------------------------------
             p.fill(0);
             p.noStroke();
-            p.text("Fuel type:", cardX + 40, cardY + 205);
+            p.textAlign(p.LEFT, p.TOP);
+            p.text("Fuel type:", cardX + 40, cardY + 165);
 
             fuelButtons = [];
             var btnX = cardX + 40;
-            var btnY = cardY + 225;
+            var btnY = cardY + 185;
             var btnW = 70;
             var btnH = 22;
             var gap = 10;
@@ -302,12 +256,15 @@
                 fuelButtons.push({ x1: x1, y1: y1, x2: x2, y2: y2, label: fuelOptions[i] });
 
                 if (i === selectedFuelIndex) {
-                    p.fill(50);
+                    p.fill(40, 120, 200); // blue active
+                    p.noStroke();
                     p.rect(x1, y1, btnW, btnH, 4);
                     p.fill(255);
                 } else {
                     p.fill(245);
+                    p.stroke(220);
                     p.rect(x1, y1, btnW, btnH, 4);
+                    p.noStroke();
                     p.fill(0);
                 }
                 p.textAlign(p.CENTER, p.CENTER);
@@ -316,9 +273,8 @@
             }
 
             // ---- Filter + show cars (bottom of card) -----------------------
-            var maxCo2    = co2Slider.value;
-            var minHp     = hpSlider.value;
-            var maxPrice  = priceSlider.value;
+            var maxCo2     = co2Slider.value;
+            var minHp      = hpSlider.value;
             var fuelChoice = fuelOptions[selectedFuelIndex];
 
             var filtered = [];
@@ -329,10 +285,9 @@
                 var price = getPrice(d);
                 var fuel  = mapFuelCategory(getFuelRaw(d));
 
-                if (!isFinite(co2) || !isFinite(hp) || !isFinite(price)) continue;
+                if (!isFinite(co2) || !isFinite(hp)) continue;
                 if (co2 > maxCo2) continue;
-                if (hp < minHp) continue;
-                if (price > maxPrice) continue;
+                if (hp  < minHp) continue;
                 if (fuelChoice !== "Any" && fuel !== fuelChoice) continue;
 
                 filtered.push({
@@ -348,14 +303,14 @@
             filtered.sort(function (a, b) { return a.co2 - b.co2; });
 
             var listX = cardX + 40;
-            var listY = cardY + 265; // bottom band
+            var listY = cardY + 225;
 
             p.textAlign(p.LEFT, p.TOP);
             p.textSize(12);
             p.fill(0);
 
             if (!filtered.length) {
-                p.text("No cars match your filters.\nTry relaxing CO\u2082, HP, or price.",
+                p.text("No cars match your filters.\nTry relaxing CO\u2082 or HP.",
                        listX, listY);
             } else {
                 var maxShown = Math.min(5, filtered.length);
@@ -369,30 +324,26 @@
                 for (var k = 0; k < maxShown; k++) {
                     var car = filtered[k];
 
-                    // Name line
-                    p.textSize(12);
-                    p.text(
-                        (k + 1) + ". " + car.make + " " + car.model,
-                        listX, ly
-                    );
-                    ly += 14;
-
-                    // Details line
-                    p.textSize(11);
                     var priceText;
-                    if (car.price >= 1000) {
-                        priceText = "\u20ac" + (car.price / 1000).toFixed(1) + "k";
+                    if (isFinite(car.price)) {
+                        if (car.price >= 1000) {
+                            priceText = "\u20ac" + (car.price / 1000).toFixed(1) + "k";
+                        } else {
+                            priceText = "\u20ac" + car.price.toFixed(0);
+                        }
                     } else {
-                        priceText = "\u20ac" + car.price.toFixed(0);
+                        priceText = "price n/a";
                     }
 
+                    p.textSize(12);
                     p.text(
-                        "CO\u2082 " + car.co2.toFixed(0) + " g/km, " +
+                        (k + 1) + ". " + car.make + " " + car.model +
+                        " — CO\u2082 " + car.co2.toFixed(0) + " g/km, " +
                         car.hp.toFixed(0) + " HP, " +
                         priceText + ", " + car.fuel,
-                        listX + 18, ly
+                        listX, ly
                     );
-                    ly += 22;
+                    ly += 20;
                 }
             }
         }
