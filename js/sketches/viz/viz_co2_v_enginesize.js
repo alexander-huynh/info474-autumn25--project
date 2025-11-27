@@ -1,5 +1,5 @@
 // viz_scatter.js
-// CO₂ vs Engine Size (cleaner visuals; no threshold)
+// CO₂ vs Engine Size (cropped domain + better ticks + CAR TYPE ICONS)
 (function () {
 
     window.VizScatter = {
@@ -21,38 +21,42 @@
             }
 
             // --- 0. Min/max for scaling ------------------------------------
-            var minPower = Infinity, maxPower = -Infinity;
-            var minCo2 = Infinity,   maxCo2 = -Infinity;
+            var rawMin = Infinity, rawMax = -Infinity;
+            var minCo2 = Infinity,  maxCo2 = -Infinity;
 
             for (var i = 0; i < data.length; i++) {
                 var d = data[i];
-                if (d.power < minPower) minPower = d.power;
-                if (d.power > maxPower) maxPower = d.power;
-                if (d.co2   < minCo2)   minCo2   = d.co2;
-                if (d.co2   > maxCo2)   maxCo2   = d.co2;
+                if (d.power < rawMin) rawMin = d.power;
+                if (d.power > rawMax) rawMax = d.power;
+                if (d.co2   < minCo2) minCo2 = d.co2;
+                if (d.co2   > maxCo2) maxCo2 = d.co2;
             }
 
-            // Padding for labels + title
+            // --- CROPPED DOMAIN --------------------------------------------
+            var minPower = 900;         
+            var maxPower = 5000;        
+
+            function clamp(v, lo, hi) {
+                return Math.max(lo, Math.min(hi, v));
+            }
+
+            // Padding
             var innerLeft   = left + 60;
             var innerRight  = left + w - 20;
             var innerTop    = top + 60;
             var innerBottom = top + h - 50;
 
-            // --- 1. Background gridlines (light) ---------------------------
+            // --- 1. Background gridlines -----------------------------------
             p.stroke(220);
             p.strokeWeight(1);
 
-            // vertical gridlines
-            var gridXTicks = 5;
-            for (var gx = 0; gx <= gridXTicks; gx++) {
-                var t = gx / gridXTicks;
-                var rawX = p.lerp(minPower, maxPower, t);
-                var xv   = Math.round(rawX / 100) * 100;
-                var xPos = p.map(xv, minPower, maxPower, innerLeft, innerRight);
+            var xLiters = [1.0, 2.0, 3.0, 4.0, 5.0];
+            for (var iL = 0; iL < xLiters.length; iL++) {
+                var cc = xLiters[iL] * 1000;
+                var xPos = p.map(cc, minPower, maxPower, innerLeft, innerRight);
                 p.line(xPos, innerTop, xPos, innerBottom);
             }
 
-            // horizontal gridlines
             var gridYTicks = 5;
             for (var gy = 0; gy <= gridYTicks; gy++) {
                 var t = gy / gridYTicks;
@@ -66,9 +70,7 @@
             p.stroke(0);
             p.strokeWeight(1);
 
-            // y-axis
             p.line(innerLeft, innerTop, innerLeft, innerBottom);
-            // x-axis
             p.line(innerLeft, innerBottom, innerRight, innerBottom);
 
             // --- 3. Tick marks + labels ------------------------------------
@@ -76,19 +78,18 @@
             p.fill(0);
             p.noStroke();
 
-            var xticks = 5;
-            for (var xi = 0; xi <= xticks; xi++) {
-                var t  = xi / xticks;
-                var rawX = p.lerp(minPower, maxPower, t);
-                var xv   = Math.round(rawX / 100) * 100;
-                var xPos = p.map(xv, minPower, maxPower, innerLeft, innerRight);
+            var xtickLiters = [1.0, 2.0, 3.0, 4.0, 5.0];
+            for (var xi = 0; xi < xtickLiters.length; xi++) {
+                var liters = xtickLiters[xi];
+                var cc = liters * 1000;
+                var xPos = p.map(cc, minPower, maxPower, innerLeft, innerRight);
 
                 p.stroke(0);
                 p.line(xPos, innerBottom, xPos, innerBottom + 4);
 
                 p.noStroke();
                 p.textAlign(p.CENTER, p.TOP);
-                p.text(xv, xPos, innerBottom + 6);
+                p.text(liters.toFixed(1) + "L", xPos, innerBottom + 6);
             }
 
             var yticks = 5;
@@ -109,7 +110,7 @@
             // --- 4. Axis labels ---------------------------------------------
             p.textAlign(p.CENTER, p.TOP);
             p.textSize(12);
-            p.text('Size (cc)', (innerLeft + innerRight) / 2, innerBottom + 28);
+            p.text('Engine Size (L)', (innerLeft + innerRight) / 2, innerBottom + 28);
 
             p.push();
             p.translate(left + 20, (innerTop + innerBottom) / 2);
@@ -123,18 +124,54 @@
             p.textSize(14);
             p.text('CO₂ Emissions vs Engine Size', left + w / 2, innerTop - 28);
 
-            // --- 6. Draw points (clean, readable) --------------------------
+            // --- 6. Draw points --------------------------------------------
             p.noStroke();
-            p.fill(100, 100, 100, 120); // slightly darker + more opacity
+            p.fill(100, 100, 100, 120);
 
             var pointSize = 4;
 
             for (var j = 0; j < data.length; j++) {
                 var dpt = data[j];
-                var x = p.map(dpt.power, minPower, maxPower, innerLeft, innerRight);
-                var y = p.map(dpt.co2,   minCo2,   maxCo2,   innerBottom, innerTop);
+
+                var eng = clamp(dpt.power, minPower, maxPower);
+
+                var x = p.map(eng, minPower, maxPower, innerLeft, innerRight);
+                var y = p.map(dpt.co2, minCo2, maxCo2, innerBottom, innerTop);
+
                 p.circle(x, y, pointSize);
             }
+
+            // --- 7. CAR TYPE ICONS -----------------------------------------
+            // Icon Y-position (slightly below x-axis labels)
+            var iconY = innerBottom + 22;
+            var iconSize = 14;
+
+            function drawHatchback(x) {
+                p.fill(70);
+                p.rectMode(p.CENTER);
+                p.rect(x, iconY, iconSize, iconSize * 0.55, 2);
+            }
+
+            function drawSedan(x) {
+                p.fill(70);
+                p.rectMode(p.CENTER);
+                p.rect(x, iconY, iconSize * 1.1, iconSize * 0.45, 2);
+            }
+
+            function drawSUV(x) {
+                p.fill(70);
+                p.rectMode(p.CENTER);
+                p.rect(x, iconY, iconSize * 1.2, iconSize * 0.75, 2);
+            }
+
+            // hatchback: ~1.2-1.6L
+            drawHatchback(p.map(1400, minPower, maxPower, innerLeft, innerRight));
+
+            // sedan: ~2.0-2.5L
+            drawSedan(p.map(2300, minPower, maxPower, innerLeft, innerRight));
+
+            // suv: ~3.0-4.0L
+            drawSUV(p.map(3500, minPower, maxPower, innerLeft, innerRight));
 
         }
     };
