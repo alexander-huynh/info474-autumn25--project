@@ -129,10 +129,8 @@
             p.fill(100, 100, 100, 120);
 
             var pointSize = 4;
-
             for (var j = 0; j < data.length; j++) {
                 var dpt = data[j];
-
                 var eng = clamp(dpt.power, minPower, maxPower);
 
                 var x = p.map(eng, minPower, maxPower, innerLeft, innerRight);
@@ -141,37 +139,46 @@
                 p.circle(x, y, pointSize);
             }
 
-            // --- 7. CAR TYPE ICONS -----------------------------------------
-            // Icon Y-position (slightly below x-axis labels)
-            var iconY = innerBottom + 22;
-            var iconSize = 14;
+// --- 7. CAR TYPE ICONS (emoji, improved) --------------------------------
 
-            function drawHatchback(x) {
-                p.fill(70);
-                p.rectMode(p.CENTER);
-                p.rect(x, iconY, iconSize, iconSize * 0.55, 2);
-            }
+// icon baseline (thin line behind emojis)
+p.stroke(180);
+p.strokeWeight(1);
+var iconBaselineY = innerBottom + 22;
+p.line(innerLeft, iconBaselineY, innerRight, iconBaselineY);
 
-            function drawSedan(x) {
-                p.fill(70);
-                p.rectMode(p.CENTER);
-                p.rect(x, iconY, iconSize * 1.1, iconSize * 0.45, 2);
-            }
+// emoji settings
+var iconY = innerBottom + 18;   // tighter to x-axis
+var iconSize = 20;              // slightly smaller for crispness
+p.textSize(iconSize);
+p.textAlign(p.CENTER, p.CENTER);
 
-            function drawSUV(x) {
-                p.fill(70);
-                p.rectMode(p.CENTER);
-                p.rect(x, iconY, iconSize * 1.2, iconSize * 0.75, 2);
-            }
+// helper to draw emojis with white halo + shadow
+function drawEmoji(emoji, x, y) {
+    // white background halo
+    p.noStroke();
+    p.fill(255);
+    p.circle(x, y, iconSize * 1.4);
 
-            // hatchback: ~1.2-1.6L
-            drawHatchback(p.map(1400, minPower, maxPower, innerLeft, innerRight));
+    // black soft shadow (slightly lower)
+    p.fill(0, 30);
+    p.text(emoji, x, y + 2);
 
-            // sedan: ~2.0-2.5L
-            drawSedan(p.map(2300, minPower, maxPower, innerLeft, innerRight));
+    // emoji itself (full opacity)
+    p.fill(0);
+    p.text(emoji, x, y);
+}
 
-            // suv: ~3.0-4.0L
-            drawSUV(p.map(3500, minPower, maxPower, innerLeft, innerRight));
+// positions
+var xSmall  = p.map(1400, minPower, maxPower, innerLeft, innerRight);
+var xMedium = p.map(2300, minPower, maxPower, innerLeft, innerRight);
+var xLarge  = p.map(3500, minPower, maxPower, innerLeft, innerRight);
+
+// draw emojis
+drawEmoji("🚗", xSmall,  iconY);
+drawEmoji("🚙", xMedium, iconY);
+drawEmoji("🚐", xLarge,  iconY);
+
 
         }
     };
