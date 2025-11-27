@@ -68,7 +68,7 @@
             var cardH = h - 40;
 
             p.noStroke();
-            p.fill(230);
+            p.fill(255);
             p.rect(cardX, cardY, cardW, cardH, 6);
 
             p.fill(0);
@@ -145,7 +145,7 @@
 
                 // white bars
                 p.noStroke();
-                p.fill(255);
+                p.fill(0, 120, 220);
                 p.rect(bx, by, barWidth, hVal);
 
                 // category label
