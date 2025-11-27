@@ -25,6 +25,10 @@
             var minCo2 = Infinity,  maxCo2 = -Infinity;
 
             for (var i = 0; i < data.length; i++) {
+
+minCo2 = 80;
+maxCo2 = 380;
+
                 var d = data[i];
                 if (d.power < rawMin) rawMin = d.power;
                 if (d.power > rawMax) rawMax = d.power;
