@@ -101,6 +101,13 @@
         return "Unknown make";
     }
 
+    // Truncate long text with ellipsis so it doesn't bleed into next column
+    function shorten(text, maxChars) {
+        text = String(text);
+        if (text.length <= maxChars) return text;
+        return text.substring(0, maxChars - 1) + "…";
+    }
+
     var fuelOptions = ["Any", "Petrol", "Diesel"];
     var selectedFuelIndex = 0;
     var fuelButtons = [];
@@ -309,18 +316,59 @@
             p.textSize(12);
             p.fill(0);
 
+            // ---- TABLE RENDERING ------------------------------------------
             if (!filtered.length) {
                 p.text("No cars match your filters.\nTry relaxing CO\u2082 or HP.",
                        listX, listY);
             } else {
-                var maxShown = Math.min(5, filtered.length);
+                // show up to 10 rows
+                var maxShown = Math.min(10, filtered.length);
+
+                p.textSize(12);
+                p.fill(0);
                 p.text(
                     "Top matching cars (lowest CO\u2082 first)\n" +
                     "Showing " + maxShown + " of " + filtered.length + " matches:",
                     listX, listY
                 );
 
-                var ly = listY + 30;
+                // Simple table layout
+                var tableX  = listX;
+                var tableY  = listY + 30;
+                var rowH    = 20;
+                var headerH = 22;
+
+                // Column definitions – give Make & Model more space,
+                // and keep total width reasonable inside the card.
+                var cols = [
+                    { label: "#",             width: 24 },
+                    { label: "Make & Model",  width: 210 },
+                    { label: "CO\u2082 (g/km)", width: 70 },
+                    { label: "HP",            width: 45 },
+                    { label: "Price",         width: 75 },
+                    { label: "Fuel",          width: 55 }
+                ];
+
+                var totalW = 0;
+                for (var c = 0; c < cols.length; c++) totalW += cols[c].width;
+
+                // Header background
+                p.stroke(220);
+                p.fill(245);
+                p.rect(tableX, tableY, totalW, headerH);
+
+                // Header text
+                var xCursor = tableX;
+                p.textAlign(p.LEFT, p.CENTER);
+                p.fill(0);
+                p.textSize(11);
+                for (var c = 0; c < cols.length; c++) {
+                    var col = cols[c];
+                    p.text(col.label, xCursor + 4, tableY + headerH / 2);
+                    xCursor += col.width;
+                }
+
+                // Rows
                 for (var k = 0; k < maxShown; k++) {
                     var car = filtered[k];
 
@@ -332,18 +380,40 @@
                             priceText = "\u20ac" + car.price.toFixed(0);
                         }
                     } else {
-                        priceText = "price n/a";
+                        priceText = "n/a";
                     }
 
-                    p.textSize(12);
-                    p.text(
-                        (k + 1) + ". " + car.make + " " + car.model +
-                        " — CO\u2082 " + car.co2.toFixed(0) + " g/km, " +
-                        car.hp.toFixed(0) + " HP, " +
-                        priceText + ", " + car.fuel,
-                        listX, ly
-                    );
-                    ly += 20;
+                    var rowY = tableY + headerH + k * rowH;
+
+                    // Optional zebra striping
+                    p.noStroke();
+                    if (k % 2 === 0) {
+                        p.fill(252);
+                        p.rect(tableX, rowY, totalW, rowH);
+                    }
+
+                    p.fill(0);
+                    p.textAlign(p.LEFT, p.CENTER);
+                    xCursor = tableX;
+
+                    var makeModel = car.make + " " + car.model;
+                    // Truncate so it doesn't bleed into the next column
+                    makeModel = shorten(makeModel, 26); // tweak 26 if needed
+
+                    var cells = [
+                        String(k + 1),
+                        makeModel,
+                        car.co2.toFixed(0),
+                        car.hp.toFixed(0),
+                        priceText,
+                        car.fuel
+                    ];
+
+                    for (var c = 0; c < cols.length; c++) {
+                        var col = cols[c];
+                        p.text(cells[c], xCursor + 4, rowY + rowH / 2);
+                        xCursor += col.width;
+                    }
                 }
             }
         }

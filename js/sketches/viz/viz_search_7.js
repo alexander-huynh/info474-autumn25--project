@@ -365,6 +365,7 @@
                 p.fill(40, 80, 140);
                 p.text("Your car", barX + carLen + 6, barY + 16);
             }
+        
         }
     };
 })();
