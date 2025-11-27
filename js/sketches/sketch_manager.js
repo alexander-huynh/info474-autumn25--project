@@ -49,6 +49,24 @@ function startP5() {
                 self.draw(p);
             };
 
+            p.mousePressed = function () {
+                // Forward click to the active visualization if it supports mousePressed()
+                var ai = self.state.activeIndex || 0;
+
+                var viz = null;
+                if (ai === 1) viz = window.VizFuelTypes;
+                if (ai === 2) viz = window.VizScatter;
+                if (ai === 3) viz = window.VizScatter2;   // << your scatter with fuel filter buttons
+                if (ai === 4) viz = window.VizBar2;
+                if (ai === 5) viz = window.VizFilterPanel;
+                if (ai === 6) viz = window.VizSearchCar;
+
+                if (viz && typeof viz.mousePressed === "function") {
+                    return viz.mousePressed(p, self);
+                }
+            };
+
+
         };
 
         this.p5 = new p5(sketch);
