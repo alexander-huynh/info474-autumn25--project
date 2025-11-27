@@ -141,13 +141,11 @@
 
             // --- 7. CAR TYPE ICONS (emoji, improved) --------------------------------
 
-            // icon baseline (thin line behind emojis)
             p.stroke(180);
             p.strokeWeight(1);
             var iconBaselineY = innerBottom + 22;
             p.line(innerLeft, iconBaselineY, innerRight, iconBaselineY);
 
-            // emoji settings
             var iconY = innerBottom + 18;
             var iconSize = 20;
             p.textSize(iconSize);
@@ -173,14 +171,31 @@
             drawEmoji("🚙", xMedium, iconY);
             drawEmoji("🚐", xLarge,  iconY);
 
-            // --- 8. CAPTION (NEW, minimal, outside graph) ---------------------
+            // --- 8. LEGEND (top-left inside the plot area) ------------------------
+            p.textSize(11);
+            p.fill(60);
+            p.textAlign(p.LEFT, p.TOP);
+
+            // place legend under the title, inside the plot
+            var legendX = innerLeft + 6;
+            var legendY = innerTop + 4;
+            var legendSpacing = 16;
+
+            // three stacked lines
+            p.text("🚗 Small cars (1.2–1.6L)", legendX, legendY);
+            p.text("🚙 Sedans / crossovers (2.0–2.5L)", legendX, legendY + legendSpacing);
+            p.text("🚐 Large SUVs / vans (3.0–4.0L)", legendX, legendY + legendSpacing * 2);
+
+
+
+            // --- 9. CAPTION ----------------------------------------------------
             p.textSize(11);
             p.fill(120);
             p.textAlign(p.CENTER, p.TOP);
             p.text(
                 "Data source: European Vehicle CO₂ Dataset (NEDC)",
                 left + w / 2,
-                top + h - 5   // placed below the entire plot area
+                top + h - 5
             );
 
         }
