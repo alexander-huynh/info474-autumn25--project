@@ -139,46 +139,49 @@
                 p.circle(x, y, pointSize);
             }
 
-// --- 7. CAR TYPE ICONS (emoji, improved) --------------------------------
+            // --- 7. CAR TYPE ICONS (emoji, improved) --------------------------------
 
-// icon baseline (thin line behind emojis)
-p.stroke(180);
-p.strokeWeight(1);
-var iconBaselineY = innerBottom + 22;
-p.line(innerLeft, iconBaselineY, innerRight, iconBaselineY);
+            // icon baseline (thin line behind emojis)
+            p.stroke(180);
+            p.strokeWeight(1);
+            var iconBaselineY = innerBottom + 22;
+            p.line(innerLeft, iconBaselineY, innerRight, iconBaselineY);
 
-// emoji settings
-var iconY = innerBottom + 18;   // tighter to x-axis
-var iconSize = 20;              // slightly smaller for crispness
-p.textSize(iconSize);
-p.textAlign(p.CENTER, p.CENTER);
+            // emoji settings
+            var iconY = innerBottom + 18;
+            var iconSize = 20;
+            p.textSize(iconSize);
+            p.textAlign(p.CENTER, p.CENTER);
 
-// helper to draw emojis with white halo + shadow
-function drawEmoji(emoji, x, y) {
-    // white background halo
-    p.noStroke();
-    p.fill(255);
-    p.circle(x, y, iconSize * 1.4);
+            function drawEmoji(emoji, x, y) {
+                p.noStroke();
+                p.fill(255);
+                p.circle(x, y, iconSize * 1.4);
 
-    // black soft shadow (slightly lower)
-    p.fill(0, 30);
-    p.text(emoji, x, y + 2);
+                p.fill(0, 30);
+                p.text(emoji, x, y + 2);
 
-    // emoji itself (full opacity)
-    p.fill(0);
-    p.text(emoji, x, y);
-}
+                p.fill(0);
+                p.text(emoji, x, y);
+            }
 
-// positions
-var xSmall  = p.map(1400, minPower, maxPower, innerLeft, innerRight);
-var xMedium = p.map(2300, minPower, maxPower, innerLeft, innerRight);
-var xLarge  = p.map(3500, minPower, maxPower, innerLeft, innerRight);
+            var xSmall  = p.map(1400, minPower, maxPower, innerLeft, innerRight);
+            var xMedium = p.map(2300, minPower, maxPower, innerLeft, innerRight);
+            var xLarge  = p.map(3500, minPower, maxPower, innerLeft, innerRight);
 
-// draw emojis
-drawEmoji("🚗", xSmall,  iconY);
-drawEmoji("🚙", xMedium, iconY);
-drawEmoji("🚐", xLarge,  iconY);
+            drawEmoji("🚗", xSmall,  iconY);
+            drawEmoji("🚙", xMedium, iconY);
+            drawEmoji("🚐", xLarge,  iconY);
 
+            // --- 8. CAPTION (NEW, minimal, outside graph) ---------------------
+            p.textSize(11);
+            p.fill(120);
+            p.textAlign(p.CENTER, p.TOP);
+            p.text(
+                "Data source: European Vehicle CO₂ Dataset (NEDC)",
+                left + w / 2,
+                top + h - 5   // placed below the entire plot area
+            );
 
         }
     };
