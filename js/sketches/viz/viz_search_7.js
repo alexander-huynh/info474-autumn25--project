@@ -135,12 +135,10 @@
         eventsBound = true;
 
         p.keyTyped = function () {
-            if (currentAi !== 6) return; // only when Viz 7 is active
+            if (currentAi !== 6) return; // only when this viz is active
 
-            // allow basic letters, numbers, space
             if (p.key.length === 1 && searchQuery.length < 30) {
                 var ch = p.key;
-                // ignore weird control characters
                 if (ch >= " " && ch <= "~") {
                     searchQuery += ch;
                 }
@@ -154,7 +152,7 @@
                 if (searchQuery.length > 0) {
                     searchQuery = searchQuery.slice(0, -1);
                 }
-                return false; 
+                return false;
             }
 
             if (p.keyCode === p.ENTER || p.keyCode === p.RETURN) {
@@ -210,41 +208,47 @@
             var cardW = w - 40;
             var cardH = h - 40;
 
-            p.noStroke();
-            p.fill(230);
+            // white card, light border
+            p.stroke(220);
+            p.strokeWeight(1);
+            p.fill(255);
             p.rect(cardX, cardY, cardW, cardH, 6);
 
-            // title
+            // title + subtitle
             p.fill(0);
             p.textAlign(p.LEFT, p.TOP);
             p.textSize(14);
-            p.text("Visual 7 – Search Your Car: See How It Compares",
-                   cardX + 12, cardY + 10);
+            p.text("How Does Your Car Compare?", cardX + 12, cardY + 10);
 
-            p.textSize(12);
+            p.textSize(11);
+            p.fill(90);
+            p.text("Search your car model to compare its CO\u2082 and power to the dataset average.",
+                   cardX + 12, cardY + 30);
 
             // search label
+            p.textSize(12);
+            p.fill(0);
             p.text("Search car model (type and press Enter):",
                    cardX + 40, cardY + 60);
 
-            // fake input box
+            // faux input box
             var inputX = cardX + 40;
             var inputY = cardY + 80;
             var inputW = cardW - 80;
             var inputH = 26;
 
-            p.stroke(160);
+            p.stroke(searchQuery.length > 0 ? p.color(40, 120, 200) : p.color(210));
             p.strokeWeight(1.5);
-            p.fill(245);
+            p.fill(255);
             p.rect(inputX, inputY, inputW, inputH, 4);
 
             p.noStroke();
-            p.fill(0);
             p.textAlign(p.LEFT, p.CENTER);
 
             var displayText = searchQuery || "e.g., Prius, Golf, 3 Series";
             var placeholder = searchQuery.length === 0;
-            if (placeholder) p.fill(120);
+            if (placeholder) p.fill(140);
+            else p.fill(0);
 
             p.text(displayText, inputX + 8, inputY + inputH / 2);
 
@@ -258,8 +262,8 @@
             if (!searchHasRun) {
                 p.text(
                     "Start typing the name of your car and press Enter.\n" +
-                    "We’ll look it up in the EU emissions dataset and show how it\n" +
-                    "compares to the average car in terms of CO\u2082 and horsepower.",
+                    "We’ll look it up in the EU emissions dataset and show how it compares\n" +
+                    "to the average car in terms of CO\u2082 and horsepower.",
                     infoX, infoY
                 );
                 return;
@@ -277,7 +281,8 @@
             // we have a match
             var car = lastResult;
 
-            var lineY = infoY;
+            var lineY = infoX; // reuse variable name but as y-position
+            lineY = infoY;
             p.textSize(13);
             p.text("Closest match:", infoX, lineY); lineY += 20;
 
@@ -335,30 +340,29 @@
             // simple horizontal comparison bar for CO2
             if (isFinite(avgCo2)) {
                 var barX = cardX + 40;
-                var barY = cardY + cardH - 70;
+                var barY = cardY + cardH - 80;
                 var barW = cardW - 80;
                 var barH = 10;
 
-                // base axis
                 p.textSize(12);
                 p.fill(0);
                 p.text("CO\u2082 comparison (lower is better):", barX, barY - 18);
 
                 var maxScale = Math.max(avgCo2, car.co2) * 1.2;
 
-                // average bar (grey)
+                // average bar – light grey
                 p.noStroke();
-                p.fill(190);
+                p.fill(220);
                 var avgLen = barW * (avgCo2 / maxScale);
                 p.rect(barX, barY, avgLen, barH, 3);
-                p.fill(60);
+                p.fill(90);
                 p.text("Average", barX + avgLen + 6, barY - 2);
 
-                // your car bar (purple-ish)
-                p.fill(80);
+                // your car bar – blue
+                p.fill(40, 120, 200);
                 var carLen = barW * (car.co2 / maxScale);
                 p.rect(barX, barY + 18, carLen, barH, 3);
-                p.fill(20);
+                p.fill(40, 80, 140);
                 p.text("Your car", barX + carLen + 6, barY + 16);
             }
         }
