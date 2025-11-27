@@ -2,6 +2,13 @@
 // CO₂ vs Engine Size (cropped domain + better ticks + CAR TYPE ICONS)
 (function () {
 
+    // ---------------------------------------------------------
+    // PROMPT A ADDITIONS — global arrays for hover later
+    // ---------------------------------------------------------
+    var screenPts   = [];   // stores on-screen positions of each dot
+    var hoverIndex  = -1;   // index of hovered point (used in B/C)
+    // ---------------------------------------------------------
+
     window.VizScatter = {
         draw: function (p, manager, ai, progress) {
             var data = manager.data || [];
@@ -9,6 +16,10 @@
             var top = manager.offsetY || 0;
             var w = manager.width || 600;
             var h = manager.height || 520;
+
+            // reset storage each frame
+            screenPts  = [];
+            hoverIndex = -1;
 
             p.background(255);
 
@@ -22,23 +33,18 @@
 
             // --- 0. Min/max for scaling ------------------------------------
             var rawMin = Infinity, rawMax = -Infinity;
-            var minCo2 = Infinity,  maxCo2 = -Infinity;
+            var minCo2 = 80;
+            var maxCo2 = 380;
 
             for (var i = 0; i < data.length; i++) {
-
-minCo2 = 80;
-maxCo2 = 380;
-
                 var d = data[i];
                 if (d.power < rawMin) rawMin = d.power;
                 if (d.power > rawMax) rawMax = d.power;
-                if (d.co2   < minCo2) minCo2 = d.co2;
-                if (d.co2   > maxCo2) maxCo2 = d.co2;
             }
 
             // --- CROPPED DOMAIN --------------------------------------------
-            var minPower = 900;         
-            var maxPower = 5000;        
+            var minPower = 900;
+            var maxPower = 5000;
 
             function clamp(v, lo, hi) {
                 return Math.max(lo, Math.min(hi, v));
@@ -64,8 +70,7 @@ maxCo2 = 380;
             var gridYTicks = 5;
             for (var gy = 0; gy <= gridYTicks; gy++) {
                 var t = gy / gridYTicks;
-                var rawY = p.lerp(minCo2, maxCo2, t);
-                var yv   = Math.round(rawY / 20) * 20;
+                var yv = Math.round(p.lerp(minCo2, maxCo2, t) / 20) * 20;
                 var yPos = p.map(yv, minCo2, maxCo2, innerBottom, innerTop);
                 p.line(innerLeft, yPos, innerRight, yPos);
             }
@@ -73,7 +78,6 @@ maxCo2 = 380;
             // --- 2. Axes ----------------------------------------------------
             p.stroke(0);
             p.strokeWeight(1);
-
             p.line(innerLeft, innerTop, innerLeft, innerBottom);
             p.line(innerLeft, innerBottom, innerRight, innerBottom);
 
@@ -82,9 +86,8 @@ maxCo2 = 380;
             p.fill(0);
             p.noStroke();
 
-            var xtickLiters = [1.0, 2.0, 3.0, 4.0, 5.0];
-            for (var xi = 0; xi < xtickLiters.length; xi++) {
-                var liters = xtickLiters[xi];
+            for (var xi = 0; xi < xLiters.length; xi++) {
+                var liters = xLiters[xi];
                 var cc = liters * 1000;
                 var xPos = p.map(cc, minPower, maxPower, innerLeft, innerRight);
 
@@ -98,9 +101,7 @@ maxCo2 = 380;
 
             var yticks = 5;
             for (var yi = 0; yi <= yticks; yi++) {
-                var ty = yi / yticks;
-                var rawY = p.lerp(minCo2, maxCo2, ty);
-                var yv   = Math.round(rawY / 20) * 20;
+                var yv = Math.round(p.lerp(minCo2, maxCo2, yi / yticks) / 20) * 20;
                 var yPos = p.map(yv, minCo2, maxCo2, innerBottom, innerTop);
 
                 p.stroke(0);
@@ -128,11 +129,10 @@ maxCo2 = 380;
             p.textSize(14);
             p.text('CO₂ Emissions vs Engine Size', left + w / 2, innerTop - 28);
 
-            // --- 6. Draw points --------------------------------------------
+            // --- 6. Draw points + store screen coords ----------------------
             p.noStroke();
             p.fill(100, 100, 100, 120);
 
-            var pointSize = 4;
             for (var j = 0; j < data.length; j++) {
                 var dpt = data[j];
                 var eng = clamp(dpt.power, minPower, maxPower);
@@ -140,11 +140,76 @@ maxCo2 = 380;
                 var x = p.map(eng, minPower, maxPower, innerLeft, innerRight);
                 var y = p.map(dpt.co2, minCo2, maxCo2, innerBottom, innerTop);
 
-                p.circle(x, y, pointSize);
+                screenPts.push({
+                    x: x,
+                    y: y,
+                    liters: dpt.power / 1000,
+                    co2: dpt.co2
+                });
+
+                p.circle(x, y, 4);
             }
 
-            // --- 7. CAR TYPE ICONS (emoji, improved) --------------------------------
+            // -------------------------------------------------------------
+            // PROMPT B — Hover detection + highlight
+            // -------------------------------------------------------------
+            var mx = p.mouseX;
+            var my = p.mouseY;
+            var bestDist = 99999;
 
+            for (var idx = 0; idx < screenPts.length; idx++) {
+                var pt = screenPts[idx];
+                var dx = mx - pt.x;
+                var dy = my - pt.y;
+                var dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < 8 && dist < bestDist) {
+                    bestDist = dist;
+                    hoverIndex = idx;
+                }
+            }
+
+            if (hoverIndex !== -1) {
+                var hpt = screenPts[hoverIndex];
+                p.fill(30, 120, 240, 210);
+                p.noStroke();
+                p.circle(hpt.x, hpt.y, 8);
+            }
+
+            // -------------------------------------------------------------
+            // PROMPT C — Tooltip box
+            // -------------------------------------------------------------
+            if (hoverIndex !== -1) {
+                var tt = screenPts[hoverIndex];
+                var boxW = 110;
+                var boxH = 42;
+                var pad = 8;
+
+                var bx = mx + 12;
+                var by = my - boxH - 8;
+
+                // Clamp inside canvas
+                if (bx + boxW > left + w)  bx = left + w - boxW - 5;
+                if (by < top)              by = my + 12;
+
+                // shadow
+                p.noStroke();
+                p.fill(0, 60);
+                p.rect(bx + 2, by + 2, boxW, boxH, 6);
+
+                // tooltip background
+                p.fill(250);
+                p.rect(bx, by, boxW, boxH, 6);
+
+                // text
+                p.fill(0);
+                p.textAlign(p.LEFT, p.TOP);
+                p.textSize(11);
+                p.text("Engine: " + tt.liters.toFixed(1) + "L", bx + pad, by + 6);
+                p.text("CO₂: " + tt.co2 + " g/km",      bx + pad, by + 20);
+            }
+
+            // --- 7. CAR TYPE ICONS -----------------------------------------
             p.stroke(180);
             p.strokeWeight(1);
             var iconBaselineY = innerBottom + 22;
@@ -175,24 +240,20 @@ maxCo2 = 380;
             drawEmoji("🚙", xMedium, iconY);
             drawEmoji("🚐", xLarge,  iconY);
 
-            // --- 8. LEGEND (top-left inside the plot area) ------------------------
+            // --- 8. LEGEND --------------------------------------------------
             p.textSize(11);
             p.fill(60);
             p.textAlign(p.LEFT, p.TOP);
 
-            // place legend under the title, inside the plot
             var legendX = innerLeft + 6;
             var legendY = innerTop + 4;
             var legendSpacing = 16;
 
-            // three stacked lines
             p.text("🚗 Small cars (1.2–1.6L)", legendX, legendY);
             p.text("🚙 Sedans / crossovers (2.0–2.5L)", legendX, legendY + legendSpacing);
             p.text("🚐 Large SUVs / vans (3.0–4.0L)", legendX, legendY + legendSpacing * 2);
 
-
-
-            // --- 9. CAPTION ----------------------------------------------------
+            // --- 9. CAPTION -------------------------------------------------
             p.textSize(11);
             p.fill(120);
             p.textAlign(p.CENTER, p.TOP);
@@ -201,7 +262,6 @@ maxCo2 = 380;
                 left + w / 2,
                 top + h - 5
             );
-
         }
     };
 })();
