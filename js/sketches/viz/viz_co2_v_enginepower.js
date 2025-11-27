@@ -1,9 +1,15 @@
 // viz_scatter2.js
 // CO₂ NEDC (g/km) vs Engine Power (kW)
 // Static scatterplot with trimmed axis ranges, density fading,
-// lighter gridlines, and improved spacing.
+// lighter gridlines, improved spacing
+// + (PROMPT 1) on-screen point storage
+// + (PROMPT 2) hover detection + highlight
+// + (PROMPT 3) tooltip box.
 
 (function () {
+
+  var screenPts = [];   // for hover + tooltip
+  var hoverIndex = -1;
 
   window.VizScatter2 = {
     draw: function (p, manager, ai, progress) {
@@ -12,6 +18,9 @@
       var top  = manager.offsetY || 0;
       var w    = manager.width  || 600;
       var h    = manager.height || 520;
+
+      screenPts = [];
+      hoverIndex = -1;
 
       p.background(255);
       p.fill(0);
@@ -23,7 +32,7 @@
         return;
       }
 
-      // --- Extract numeric points ---------------------------------------
+      // Extract numeric
       var pts = [];
       for (var i = 0; i < data.length; i++) {
         var row = data[i];
@@ -34,15 +43,9 @@
         }
       }
 
-      if (!pts.length) {
-        p.text('No valid numeric data for scatterplot 2.', left + w / 2, top + h / 2);
-        return;
-      }
-
-      // --- Compute raw ranges -------------------------------------------
+      // Ranges
       var minPower = Infinity, maxPower = -Infinity;
       var minCo2   = Infinity, maxCo2   = -Infinity;
-
       for (var j = 0; j < pts.length; j++) {
         var d = pts[j];
         if (d.powerKw < minPower) minPower = d.powerKw;
@@ -51,81 +54,65 @@
         if (d.co2     > maxCo2)   maxCo2   = d.co2;
       }
 
-      // --- Trim ranges to remove misleading outliers ---------------------
+      // Trim outliers
       minPower = Math.max(minPower, 0);
       maxPower = Math.min(maxPower, 400);
-
       minCo2   = Math.max(minCo2, 80);
       maxCo2   = Math.min(maxCo2, 400);
 
-      // --- Inner plot area -----------------------------------------------
+      // Plot bounds
       var innerLeft   = left + 60;
       var innerRight  = left + w - 40;
       var innerTop    = top + 60;
       var innerBottom = top + h - 50;
 
-      // --- Gridlines (soft / transparent) --------------------------------
+      // Gridlines
+      p.stroke(200, 200, 200, 120);
+      p.strokeWeight(1);
       var xticks = 4;
       var yticks = 4;
 
-      p.stroke(200, 200, 200, 120);  // light transparent gray
-      p.strokeWeight(1);
-
-      // Vertical gridlines
-      for (var g = 0; g <= xticks; g++) {
-        var t  = g / xticks;
+      for (var gx = 0; gx <= xticks; gx++) {
+        var t = gx / xticks;
         var xv = Math.round(p.lerp(minPower, maxPower, t) / 10) * 10;
-        var gx = p.map(xv, minPower, maxPower, innerLeft, innerRight);
-        p.line(gx, innerTop, gx, innerBottom);
+        var xPos = p.map(xv, minPower, maxPower, innerLeft, innerRight);
+        p.line(xPos, innerTop, xPos, innerBottom);
       }
 
-      // Horizontal gridlines
-      for (var hline = 0; hline <= yticks; hline++) {
-        var ty = hline / yticks;
-        var yv = Math.round(p.lerp(minCo2, maxCo2, ty) / 20) * 20;
-        var gy = p.map(yv, minCo2, maxCo2, innerBottom, innerTop);
-        p.line(innerLeft, gy, innerRight, gy);
+      for (var gy = 0; gy <= yticks; gy++) {
+        var t2 = gy / yticks;
+        var yv = Math.round(p.lerp(minCo2, maxCo2, t2) / 20) * 20;
+        var yPos = p.map(yv, minCo2, maxCo2, innerBottom, innerTop);
+        p.line(innerLeft, yPos, innerRight, yPos);
       }
 
-      // --- Axes ----------------------------------------------------------
+      // Axes
       p.stroke(0);
-      p.strokeWeight(1);
       p.line(innerLeft, innerTop, innerLeft, innerBottom);
       p.line(innerLeft, innerBottom, innerRight, innerBottom);
 
-      // --- Tick marks & labels ------------------------------------------
+      // Tick labels
       p.textSize(10);
       p.fill(0);
+      p.noStroke();
 
-      // x ticks
       for (var xi = 0; xi <= xticks; xi++) {
-        var tx = xi / xticks;
-        var xt = Math.round(p.lerp(minPower, maxPower, tx) / 10) * 10;
-        var xPos = p.map(xt, minPower, maxPower, innerLeft, innerRight);
-
-        p.stroke(0);
-        p.line(xPos, innerBottom, xPos, innerBottom + 4);
-
-        p.noStroke();
+        var t3 = xi / xticks;
+        var xv2 = Math.round(p.lerp(minPower, maxPower, t3) / 10) * 10;
+        var xPos2 = p.map(xv2, minPower, maxPower, innerLeft, innerRight);
         p.textAlign(p.CENTER, p.TOP);
-        p.text(xt, xPos, innerBottom + 6);
+        p.text(xv2, xPos2, innerBottom + 6);
       }
 
-      // y ticks
       for (var yi = 0; yi <= yticks; yi++) {
-        var ty2 = yi / yticks;
-        var yt = Math.round(p.lerp(minCo2, maxCo2, ty2) / 20) * 20;
-        var yPos = p.map(yt, minCo2, maxCo2, innerBottom, innerTop);
-
-        p.stroke(0);
-        p.line(innerLeft - 4, yPos, innerLeft, yPos);
-
-        p.noStroke();
+        var t4 = yi / yticks;
+        var yv2 = Math.round(p.lerp(minCo2, maxCo2, t4) / 20) * 20;
+        var yPos2 = p.map(yv2, minCo2, maxCo2, innerBottom, innerTop);
         p.textAlign(p.RIGHT, p.CENTER);
-        p.text(yt, innerLeft - 6, yPos);
+        p.text(yv2, innerLeft - 6, yPos2);
       }
 
-      // --- Axis labels ---------------------------------------------------
+      // Axis labels
       p.textAlign(p.CENTER, p.TOP);
       p.textSize(12);
       p.text('Engine Power (kW)', (innerLeft + innerRight) / 2, innerBottom + 24);
@@ -133,11 +120,9 @@
       p.push();
       p.translate(left + 20, (innerTop + innerBottom) / 2);
       p.rotate(-Math.PI / 2);
-      p.textAlign(p.CENTER, p.TOP);
       p.text('CO₂ NEDC (g/km)', 0, 0);
       p.pop();
 
-      // --- Title + subtitle ----------------------------------------------
       p.textAlign(p.CENTER, p.BOTTOM);
       p.textSize(14);
       p.text('CO₂ Emissions vs Engine Power (kW)', left + w / 2, innerTop - 26);
@@ -147,21 +132,91 @@
       p.text(
         'Higher power generally means higher CO₂ — but the pattern is much noisier than engine size.',
         left + w / 2,
-        innerTop - 14   // moved higher
+        innerTop - 14
       );
 
-      // --- Draw scatter with density-fading ------------------------------
+      // Draw scatter points + screen storage
       p.noStroke();
       for (var k = 0; k < pts.length; k++) {
         var d2 = pts[k];
         var x = p.map(d2.powerKw, minPower, maxPower, innerLeft, innerRight);
         var y = p.map(d2.co2,     minCo2,   maxCo2,   innerBottom, innerTop);
 
+        screenPts.push({
+          x: x,
+          y: y,
+          powerKw: d2.powerKw,
+          co2: d2.co2
+        });
+
         var fade = p.map(d2.powerKw, minPower, maxPower, 30, 110);
         p.fill(100, 100, 100, fade);
         p.circle(x, y, 3.5);
       }
 
+      // Hover detection
+      var mx = p.mouseX;
+      var my = p.mouseY;
+      var bestDist = 99999;
+
+      for (var i2 = 0; i2 < screenPts.length; i2++) {
+        var pt = screenPts[i2];
+        var dx = mx - pt.x;
+        var dy = my - pt.y;
+        var dist = Math.sqrt(dx*dx + dy*dy);
+
+        if (dist < 8 && dist < bestDist) {
+          bestDist = dist;
+          hoverIndex = i2;
+        }
+      }
+
+      // Highlight + tooltip
+      if (hoverIndex !== -1) {
+        var hpt = screenPts[hoverIndex];
+
+        // Highlight point
+        p.fill(30, 120, 240, 200);
+        p.noStroke();
+        p.circle(hpt.x, hpt.y, 7.5);
+
+        // Tooltip text
+        var text1 = "Power: " + hpt.powerKw.toFixed(0) + " kW";
+        var text2 = "CO₂: "   + hpt.co2.toFixed(0)      + " g/km";
+
+        p.textSize(11);
+        p.textAlign(p.LEFT, p.TOP);
+
+        var padding = 6;
+        var boxW = Math.max(p.textWidth(text1), p.textWidth(text2)) + padding*2;
+        var boxH = 30;
+
+        // Tooltip position defaults
+        var bx = hpt.x + 14;
+        var by = hpt.y - boxH - 10;
+
+        // Adjust if near right edge
+        if (bx + boxW > left + w - 10) {
+          bx = hpt.x - boxW - 14;
+        }
+
+        // Adjust if near top edge
+        if (by < top + 10) {
+          by = hpt.y + 14;
+        }
+
+        // Box background
+        p.fill(255, 255, 255, 240);
+        p.stroke(0, 80);
+        p.strokeWeight(1);
+        p.rect(bx, by, boxW, boxH, 4);
+
+        // Text inside
+        p.noStroke();
+        p.fill(0);
+        p.text(text1, bx + padding, by + 4);
+        p.text(text2, bx + padding, by + 16);
+      }
 
     }
   };
