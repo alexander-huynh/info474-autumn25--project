@@ -195,24 +195,28 @@
             p.text('CO₂ Emissions vs Engine Size', left + w / 2, innerTop - 28);
 
             // -------------------------------------------------------------
-            // Fuel Filter Buttons
+            // Fuel Filter Buttons (moved to top-right)
             // -------------------------------------------------------------
-            var btnY = innerTop + 10;
+            var btnY = innerTop + 4;
             var activeMode = mode;
 
-            var totalW = btns[0].w + btns[1].w + btns[2].w + 20 + 20;
-            var startX = left + (w - totalW) / 2;
+            // Right-align the group by computing total width:
+            var spacing = 12;  // tighter spacing so they fit nicely
+            var totalW = btns[0].w + btns[1].w + btns[2].w + spacing * 2;
+
+            // Anchor to innerRight, with slight margin
+            var startX = innerRight - totalW - 4;
 
             for (var bi = 0; bi < btns.length; bi++) {
                 var b = btns[bi];
-                var bx = startX + bi * (b.w + 20);
+                var bx = startX + bi * (b.w + spacing);
 
                 b.x = bx;
                 b.y = btnY;
 
                 // background
                 if (activeMode === b.mode) p.fill(40, 110, 220);
-                else                      p.fill(230);
+                else p.fill(230);
 
                 p.stroke(0, 60);
                 p.rect(bx, btnY, b.w, b.h, 4);
@@ -223,6 +227,7 @@
                 p.textSize(12);
                 p.text(b.label, bx + b.w / 2, btnY + b.h / 2);
             }
+
 
             // -------------------------------------------------------------
             // Draw points + record screen coords

@@ -23,24 +23,19 @@
             var availW = (manager.width || 600) - 40;
             var availH = (manager.height || 520) - 60;
 
-            // clickable sort indicator bounds
-            var sortX1 = left + availW - 120;
-            var sortX2 = left + availW;
-            var sortY1 = top;
-            var sortY2 = top + 20;
-
-            // handle click
+            // click handler (only attach once)
             if (!window._vizbar2_clickBound) {
                 window._vizbar2_clickBound = true;
+
                 p.canvas.addEventListener("mousedown", function (evt) {
                     var rect = p.canvas.getBoundingClientRect();
                     var mx = evt.clientX - rect.left;
                     var my = evt.clientY - rect.top;
 
-                    // only active on this slide
                     if (manager.state.activeIndex !== 4) return;
 
-                    if (mx >= sortX1 && mx <= sortX2 && my >= sortY1 && my <= sortY2) {
+                    var b = window._vizbar2_btn;
+                    if (b && mx >= b.x1 && mx <= b.x2 && my >= b.y1 && my <= b.y2) {
                         window.VizBar2.cycleSort();
                     }
                 });
@@ -115,13 +110,42 @@
 
             p.push();
 
-            // --- Sort Indicator -----------------------------------------------
-            p.fill(0);
-            p.textAlign(p.RIGHT, p.TOP);
+            // ================================================================
+            // ✓✓ NEW SORT BUTTON (REAL BUTTON)
+            // ================================================================
+            var sortLabel = "Sort: " + window.VizBar2.sortMode;
             p.textSize(12);
-            p.text("Sort: " + window.VizBar2.sortMode, left + availW, top);
+            var tw = p.textWidth(sortLabel);
 
-            // --- Title + subtitle -------------------------------------------
+            var bw = tw + 20;      // button width
+            var bh = 24;           // button height
+            var bx = left + availW - bw; // right-align
+            var by = top + 2;
+
+            // Hover detection
+            var mx = p.mouseX;
+            var my = p.mouseY;
+            var isHover = (mx >= bx && mx <= bx + bw && my >= by && my <= by + bh);
+
+            // Button background
+            if (isHover) p.fill(235);
+            else p.fill(245);
+
+            p.stroke(0, 50);
+            p.rect(bx, by, bw, bh, 6);
+
+            // Button label
+            p.noStroke();
+            p.fill(0);
+            p.textAlign(p.CENTER, p.CENTER);
+            p.text(sortLabel, bx + bw / 2, by + bh / 2);
+
+            // Expose click-hitbox for event listener
+            window._vizbar2_btn = { x1: bx, y1: by, x2: bx + bw, y2: by + bh };
+
+            // ================================================================
+            // Title + subtitle
+            // ================================================================
             p.textAlign(p.CENTER, p.BOTTOM);
             p.textSize(14);
             p.text("Average CO₂ Emissions by Manufacturer (NEDC)", left + availW / 2, top - 4);
@@ -143,21 +167,21 @@
                 p.textAlign(p.LEFT, p.CENTER);
                 p.text(m.name, left, y);
 
-                var bw = (m.avg / maxAvg) * barMaxW;
-                var bx = left + 120;
-                var by = y - (rowH * 0.35);
-                var bh = rowH * 0.7;
+                var bw2 = (m.avg / maxAvg) * barMaxW;
+                var bx2 = left + 120;
+                var by2 = y - (rowH * 0.35);
+                var bh2 = rowH * 0.7;
 
                 // bar
                 p.fill(80, 150, 200, 220);
                 p.noStroke();
-                p.rect(bx, by, bw, bh, 3);
+                p.rect(bx2, by2, bw2, bh2, 3);
 
                 // numeric label
                 p.fill(0);
                 p.textAlign(p.LEFT, p.CENTER);
                 var label = Math.round(m.avg) + " g/km";
-                p.text(label, bx + bw + 6, y);
+                p.text(label, bx2 + bw2 + 6, y);
             }
 
             p.pop();
