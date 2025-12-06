@@ -91,53 +91,6 @@
 
 }
 
-/* HERO SECTION LAYOUT */
-.hero-section {
-  width: 100%;
-  padding: 60px 0;
-}
-
-.hero-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 40px;
-  width: 100%;
-}
-
-.hero-text {
-  flex: 1;
-  max-width: 600px;
-  font-size: 18px;
-  line-height: 1.6;
-}
-
-.hero-image {
-  flex: 1;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.hero-image img {
-  width: 100%;
-  height: auto;
-  border-radius: 8px;
-  object-fit: cover;
-}
-
-/* RESPONSIVE FIX FOR MOBILE */
-@media (max-width: 900px) {
-  .hero-content {
-    flex-direction: column;
-    text-align: left;
-  }
-
-  .hero-text, .hero-image {
-    max-width: 100%;
-  }
-}
-
-
 /* Images inside scroll sections (left column) */
 .step .section-image {
   display: block;

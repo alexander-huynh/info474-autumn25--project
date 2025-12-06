@@ -4,12 +4,12 @@
 
     window.VizBar2 = {
 
-        // sorting mode: "co2" | "count" | "alpha"
+        // sorting mode: "co2" | "count" | "name"
         sortMode: "co2",
 
         cycleSort: function () {
             if (this.sortMode === "co2") this.sortMode = "count";
-            else if (this.sortMode === "count") this.sortMode = "alpha";
+            else if (this.sortMode === "count") this.sortMode = "name";
             else this.sortMode = "co2";
 
             window._vizbar2_needsRecalc = true;
@@ -84,7 +84,7 @@
                 else if (window.VizBar2.sortMode === "count") {
                     arr.sort((a, b) => b.count - a.count);
                 }
-                else if (window.VizBar2.sortMode === "alpha") {
+                else if (window.VizBar2.sortMode === "name") {
                     arr.sort((a, b) => a.name.localeCompare(b.name));
                 }
 
