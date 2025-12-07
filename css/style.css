@@ -1,55 +1,56 @@
+/* --------------------------
+   Layout: One-column article
+--------------------------- */
 
 .container {
-  width: 890px;
+  max-width: 780px;   /* centered readable width */
+  margin: auto;
+  padding: 20px;
 }
 
 #graphic {
-  padding-top: 60px;
+  padding-top: 40px;
 }
 
-
+/* Remove left-column width & inline-block */
 #sections {
-  position: relative;
-  display: inline-block;
-  width: 250px;
-  top: 0px;
-  z-index: 90;
+  width: 100%;
+  display: block;
   padding-bottom: 200px;
 }
 
+/* Each text step */
 .step {
-  margin-bottom: 200px;
+  margin-bottom: 140px;
   font-family: "TiemposTextWeb-Regular","Georgia";
-  font-size: 16px;
-  line-height: 23px;
+  font-size: 18px;
+  line-height: 26px;
   color: #000000;
 }
 
 #sections .title {
-  font-family: Arial,Helvetica,"san-serif";
-  font-size: 24px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 28px;
   font-weight: bold;
-  margin-bottom: 2px;
+  margin-bottom: 12px;
   color: #000000;
-  line-height: 1.2em;
+  line-height: 1.3em;
 }
 
-#extra-space {
-  height: 300px;
+/* Visualization slot that appears after each section */
+.vis-slot {
+  width: 100%;
+  min-height: 400px;
+  margin: 40px 0 100px 0;
+  display: block;
 }
 
+/* Remove fixed-position visualization */
 #vis {
-  display: inline-block;
-  position: fixed;
-  top: 60px;
-  z-index: 100;
-  margin-left: 0;
-  /* height: 600px; */
-  /* width: 600px; */
-  /* background-color: #ddd; */
+  display: none; /* No longer used. kept only to avoid errors */
 }
 
-/* visibility helpers for popup effect controlled by VisualController */
+/* Visibility helpers (still used by VisualController if needed) */
 .vis-hidden {
   opacity: 0;
   pointer-events: none;
@@ -63,43 +64,15 @@
   transition: opacity 260ms ease, transform 260ms ease;
 }
 
-#vis .title {
-  font-size:120px;
-  text-anchor: middle;
-}
-
-#vis .sub-title {
-  font-size:80px;
-  text-anchor: middle;
-}
-
-.axis path,
-.axis line {
-  fill: none;
-  stroke: #666;
-  shape-rendering: crispEdges;
-}
-
-.highlight {
-  fill: #008080;
-  font-weight: bold;
-}
-
-.cough-arrow {
-  stroke: #000;
-  stroke-width: 4px;
-
-}
-
-/* Images inside scroll sections (left column) */
+/* Images inside scroll sections */
 .step .section-image {
   display: block;
-  max-width: 300%;        /* never wider than the text column */
-  height: auto;           /* keep aspect ratio */
-  margin: 1.5rem auto 0;  /* top margin + center horizontally */
+  max-width: 100%;
+  height: auto;
+  margin: 1.5rem auto 0;
   border-radius: 4px;
-  max-height: 80vh;       /* prevent super tall images */
-  object-fit: cover;      /* crop a bit instead of distorting if tall */
+  max-height: 80vh;
+  object-fit: cover;
 }
 
 body {

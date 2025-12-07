@@ -1,48 +1,39 @@
-// sketch_manager.js
+// sketch_manager.js — Iteration 3: single canvas, re-attached per section
 
 function startP5() {
 
-    var localRenderer;
-    // localRenderer = window.TemplateRenderer;
-    localRenderer = window.Renderer;
+    var localRenderer = window.Renderer;
 
-    // --- Sketch manager ----------------------------------------------------
     function SketchManager() {
-        // core layout settings (canvas size only)
-        this.width = 600; // content width
-        this.height = 520; // content height
+        var self = this;
+
+        this.width = 600;
+        this.height = 520;
         this.margin = { top: 0, left: 80, bottom: 40, right: 10 };
         this.canvasWidth = this.width + this.margin.left + this.margin.right;
         this.canvasHeight = this.height + this.margin.top + this.margin.bottom;
 
-        // drawing state
         this.state = { activeIndex: 0, progress: 0 };
-
-        // data will be attached by localRenderer.setData(manager, data)
         this.data = [];
 
-        // create the p5 instance bound to this manager
-        var self = this;
         var sketch = function (p) {
+
             p.setup = function () {
-                var parent = document.getElementById('vis');
-                parent.innerHTML = '';
-                p.createCanvas(self.canvasWidth, self.canvasHeight).parent('vis');
                 p.noStroke();
                 p.frameRate(30);
+
+                // INITIAL CANVAS CREATION (moved by sections.js)
+                var c = p.createCanvas(self.canvasWidth, self.canvasHeight);
+                c.class("p5Canvas");
             };
 
             p.draw = function () {
-                // which section is active?
-                var ai = (self.state && typeof self.state.activeIndex === 'number')
-                    ? self.state.activeIndex
-                    : 0;
+                var ai = self.state.activeIndex || 0;
 
+                // Section 0 = transparent (matches intro behavior)
                 if (ai === 0) {
-                    // Intro section: no white box, let page background show through
-                    p.clear();   // transparent canvas
+                    p.clear();
                 } else {
-                    // All other sections keep the white viz area
                     p.background(255);
                 }
 
@@ -64,46 +55,34 @@ function startP5() {
                 if (viz && typeof viz.mousePressed === "function") {
                     viz.mousePressed(p, self);
                 }
-
-
             };
-
-
-
         };
 
         this.p5 = new p5(sketch);
     }
 
-
-    // set visualization state (called by scroll logic)
     SketchManager.prototype.setState = function (s) {
         if (s.activeIndex !== undefined) this.state.activeIndex = s.activeIndex;
         if (s.progress !== undefined) this.state.progress = s.progress;
     };
 
-    // delegate data handling to localRenderer
     SketchManager.prototype.setData = function (newData) {
         return localRenderer.setData(this, newData);
     };
 
-    // simple drawing routine, split into helpers for clarity
     SketchManager.prototype.draw = function (p) {
         var ai = this.state.activeIndex || 0;
         var progress = this.state.progress || 0;
         localRenderer.draw(p, this, ai, progress);
     };
 
-    // create (or replace) singleton manager and expose API
+    // Replace old instance if exists
     if (window.__sketchAPI && window.__sketchAPI.p5) {
-        try { window.__sketchAPI.p5.remove(); } catch (e) { }
+        try { window.__sketchAPI.p5.remove(); } catch (e) {}
         window.__sketchAPI = null;
     }
+
     var manager = new SketchManager();
-    // initialize data via localRenderer (fail fast if missing)
-    if (!localRenderer || typeof localRenderer.setData !== 'function') {
-        throw new Error('localRenderer.setData is required at startup.');
-    }
 
     var setDataResult = localRenderer.setData(manager);
 
@@ -114,19 +93,13 @@ function startP5() {
         data: manager.data
     };
 
-    // Expose a `ready` promise so callers can wait until data/layout are ready.
-    if (setDataResult && typeof setDataResult.then === 'function') {
-        api.ready = setDataResult.then(function () { return api; });
-    } else {
-        api.ready = Promise.resolve(api);
-    }
+    api.ready =
+        (setDataResult && typeof setDataResult.then === "function")
+            ? setDataResult.then(() => api)
+            : Promise.resolve(api);
 
-    // Expose the API globally once ready so consumers (like sections) see
-    // the populated data without racing the async load.
-    api.ready.then(function () {
-        try { window.__sketchAPI = api; } catch (e) { }
-    }).catch(function () {
-        try { window.__sketchAPI = api; } catch (e) { }
+    api.ready.then(() => {
+        window.__sketchAPI = api;
     });
 
     return api;
