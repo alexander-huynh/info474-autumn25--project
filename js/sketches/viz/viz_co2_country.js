@@ -13,13 +13,10 @@
             SI: "Slovenia", SK: "Slovakia"
         },
 
-
         sortMode: "co2",   // co2 | alpha
 
         cycleSort: function () {
-            if (this.sortMode === "co2") this.sortMode = "alpha";
-            else this.sortMode = "co2";
-
+            this.sortMode = (this.sortMode === "co2" ? "alpha" : "co2");
             window._vizcountry_needsRecalc = true;
         },
 
@@ -30,49 +27,30 @@
             var availW = (manager.width  || 600) - 40;
             var availH = (manager.height || 520) - 60;
 
-            // click area setup
-            var btn = window._vizcountry_btn;
-
-            if (!window._vizcountry_clickBound) {
-                window._vizcountry_clickBound = true;
-
-                p.canvas.addEventListener("mousedown", function(evt) {
-                    var rect = p.canvas.getBoundingClientRect();
-                    var mx = evt.clientX - rect.left;
-                    var my = evt.clientY - rect.top;
-
-                    if (manager.state.activeIndex !== manager.countrySlideIndex) return;
-
-                    if (btn && mx>=btn.x1 && mx<=btn.x2 && my>=btn.y1 && my<=btn.y2) {
-                        window.VizCountry.cycleSort();
-                    }
-                });
+            // --------------------------------------------------------
+            // REBUILD DATASET
+            // --------------------------------------------------------
+            if (window._vizcountry_needsRecalc) {
+                manager._countryBars = null;
             }
 
-            // --------------------------------------------------------
-            // BUILD + SORT DATASET FROM REAL member_state VALUES
-            // --------------------------------------------------------
-            if (!manager._countryBars || window._vizcountry_needsRecalc) {
+            if (!manager._countryBars) {
                 window._vizcountry_needsRecalc = false;
 
-                // whitelist of valid country codes in your dataset
                 const VALID_MS = new Set([
                     "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "EL", "ES",
                     "FI", "FR", "HR", "HU", "IE", "IT", "LT", "LU", "LV", "MT",
                     "NL", "PL", "PT", "RO", "SE", "SI", "SK"
                 ]);
 
-
-
                 let agg = {};
 
                 for (let i = 0; i < manager.data.length; i++) {
                     let row = manager.data[i];
-
                     let country = (row.member_state || "").toString().trim().toUpperCase();
                     let co2 = parseFloat(row.co2_nedc_gpkm);
 
-                    if (!VALID_MS.has(country)) continue;   // ⬅️  REAL FILTER APPLIED
+                    if (!VALID_MS.has(country)) continue;
                     if (isNaN(co2)) continue;
 
                     if (!agg[country]) agg[country] = { sum: 0, count: 0 };
@@ -91,6 +69,7 @@
                     }
                 }
 
+                // Sorting
                 if (this.sortMode === "co2") {
                     arr.sort((a, b) => b.avg - a.avg);
                 } else {
@@ -101,9 +80,7 @@
             }
 
             var bars = manager._countryBars;
-
-            // scaling
-            var maxAvg = Math.max(...bars.map(d => d.avg));
+            var maxAvg = bars.length > 0 ? Math.max(...bars.map(d => d.avg)) : 1;
 
             var rowH = bars.length > 0 ? (availH / bars.length) : 20;
             var barMaxW = availW - 150;
@@ -114,7 +91,7 @@
             // Draw SORT button
             // --------------------------------------------------------
             var label = "Sort: " + this.sortMode;
-            p.textSize(12);
+            p.textSize(18);
             var tw = p.textWidth(label);
 
             var bw = tw + 20;
@@ -134,16 +111,41 @@
             p.textAlign(p.CENTER, p.CENTER);
             p.text(label, bx + bw/2, by + bh/2);
 
-            window._vizcountry_btn = { x1:bx, y1:by, x2:bx+bw, y2:by+bh };
+            // LIVE hitbox (updated every frame)
+            window._vizcountry_btn = {
+                x1: bx, y1: by,
+                x2: bx + bw, y2: by + bh
+            };
 
             // --------------------------------------------------------
-            // Title + subtitle
+            // CLICK HANDLER (bind AFTER button is drawn)
+            // --------------------------------------------------------
+            if (!window._vizcountry_clickBound) {
+                window._vizcountry_clickBound = true;
+
+                p.canvas.addEventListener("mousedown", function(evt) {
+                    var rect = p.canvas.getBoundingClientRect();
+                    var mx = evt.clientX - rect.left;
+                    var my = evt.clientY - rect.top;
+
+                    // DEBUG: disabling slide-index check
+                    // if (manager.state.activeIndex !== manager.countrySlideIndex) return;
+
+                    let b = window._vizcountry_btn;
+                    if (b && mx>=b.x1 && mx<=b.x2 && my>=b.y1 && my<=b.y2) {
+                        window.VizCountry.cycleSort();
+                    }
+                });
+            }
+
+            // --------------------------------------------------------
+            // Titles
             // --------------------------------------------------------
             p.textAlign(p.CENTER, p.BOTTOM);
             p.textSize(14);
             p.text("Average CO₂ Emissions by Member State", left + availW/2, top - 4);
 
-            p.textSize(11);
+            p.textSize(20);
             p.textAlign(p.CENTER, p.TOP);
             p.text("Average CO₂ Emissions by Member State", left + availW/2, top + 4);
 
@@ -152,16 +154,14 @@
             // --------------------------------------------------------
             var plotTop = top + 30;
 
-            p.textSize(12);
-            for (let i=0; i<bars.length; i++) {
+            p.textSize(16);
+            for (let i = 0; i < bars.length; i++) {
                 var r = bars[i];
                 var y = plotTop + i * rowH + rowH/2;
 
                 p.fill(30);
                 p.textAlign(p.LEFT, p.CENTER);
                 p.text(window.VizCountry.COUNTRY_NAMES[r.name] || r.name, left, y);
-
-
 
                 var bw2 = (r.avg / maxAvg) * barMaxW;
                 var bx2 = left + 120;
