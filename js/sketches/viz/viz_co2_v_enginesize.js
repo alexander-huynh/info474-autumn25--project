@@ -87,8 +87,8 @@
             // -------------------------------------------------------------
             // Min/max
             // -------------------------------------------------------------
-            var minCo2 = 80;
-            var maxCo2 = 380;
+            var minCo2 = 30;
+            var maxCo2 = 450;
 
             var rawMin = Infinity, rawMax = -Infinity;
             for (var i = 0; i < pts.length; i++) {

@@ -102,9 +102,9 @@
       }
 
       minPower = Math.max(minPower, 0);
-      maxPower = Math.min(maxPower, 400);
-      minCo2   = Math.max(minCo2, 80);
-      maxCo2   = Math.min(maxCo2, 400);
+      maxPower = Math.min(maxPower, 500);
+      minCo2   = Math.max(minCo2, 0);
+      maxCo2   = Math.min(maxCo2, 500);
 
       //------------------------------------------------------------------
       // Layout region

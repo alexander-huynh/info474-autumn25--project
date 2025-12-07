@@ -245,14 +245,15 @@
             var cardH = h - 40;
 
             p.noStroke();
-            p.fill(230);
+            p.fill(255);   // pure white
             p.rect(cardX, cardY, cardW, cardH, 6);
+
 
             // title
             p.fill(0);
             p.textAlign(p.LEFT, p.TOP);
             p.textSize(14);
-            p.text("Visual 7 – Search Your Carr: See How It Compares",
+            p.text("Visual 7 – Search Your Car: See How It Compares",
                 cardX + 12, cardY + 10);
 
             p.textSize(12);
