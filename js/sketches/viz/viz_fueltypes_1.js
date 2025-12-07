@@ -125,7 +125,13 @@
             var barGap = 20;
             var barWidth = (plotW - barGap * (n + 1)) / n;
 
-            var hovered = null; 
+            var hovered = null;
+
+            // NEW COLOR MAP
+            var barColors = {
+                Petrol: p.color(255, 140, 0),  // orange
+                Diesel: p.color(34, 139, 34)   // green
+            };
 
             p.textAlign(p.CENTER, p.TOP);
             p.textSize(11);
@@ -143,12 +149,12 @@
                 var hVal = p.map(drawVal, 0, MAX_Y, 0, plotH);
                 var by = baseY - hVal;
 
-                // white bars
+                // colored bars
                 p.noStroke();
-                p.fill(0, 120, 220);
+                p.fill(barColors[cat] || p.color(0, 120, 220));
                 p.rect(bx, by, barWidth, hVal);
 
-                // category label
+                // label
                 p.fill(0);
                 p.textSize(22);
                 p.text(cat, bx + barWidth / 2, baseY + 4);
@@ -180,14 +186,12 @@
                 var ty = hovered.y - th - 4;
                 if (tx < cardX + 4) tx = cardX + 4;
                 if (tx + tw > cardX + cardW - 4) tx = cardX + cardW - tw - 4;
-                if (ty < cardY + 4) ty = hovered.y + 10; // flip below if too high
+                if (ty < cardY + 4) ty = hovered.y + 10;
 
-                // tooltip box
                 p.noStroke();
                 p.fill(0, 200);
                 p.rect(tx, ty, tw, th, 4);
 
-                // tooltip text
                 p.fill(255);
                 p.text(label, tx + padding, ty + 3);
             }
