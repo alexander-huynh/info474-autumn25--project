@@ -147,7 +147,7 @@
       //------------------------------------------------------------------
       // Tick labels
       //------------------------------------------------------------------
-      p.textSize(10);
+      p.textSize(13);
       p.fill(0);
       p.noStroke();
 
@@ -171,7 +171,7 @@
       // Axis labels
       //------------------------------------------------------------------
       p.textAlign(p.CENTER, p.TOP);
-      p.textSize(12);
+      p.textSize(20);
       p.text('Engine Power (kW)', (innerLeft + innerRight) / 2, innerBottom + 24);
 
       p.push();
@@ -184,10 +184,10 @@
       // Title
       //------------------------------------------------------------------
       p.textAlign(p.CENTER, p.BOTTOM);
-      p.textSize(14);
+      p.textSize(28);
       p.text('CO₂ Emissions vs Engine Power (kW)', left + w / 2, innerTop - 26);
 
-      p.textSize(11);
+      p.textSize(14);
       p.textAlign(p.CENTER, p.TOP);
       p.text(
         'Higher power generally means higher CO₂ — but the pattern is much noisier than engine size.',
@@ -223,7 +223,7 @@
 
         p.fill(activeMode === b.mode ? 255 : 0);
         p.textAlign(p.CENTER, p.CENTER);
-        p.textSize(12);
+        p.textSize(18);
         p.text(b.label, bx + b.w / 2, by + b.h / 2);
       }
 

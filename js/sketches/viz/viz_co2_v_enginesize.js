@@ -143,7 +143,7 @@
             // -------------------------------------------------------------
             // Tick labels
             // -------------------------------------------------------------
-            p.textSize(10);
+            p.textSize(13);
             p.fill(0);
             p.noStroke();
 
@@ -177,7 +177,7 @@
             // Axis labels
             // -------------------------------------------------------------
             p.textAlign(p.CENTER, p.TOP);
-            p.textSize(12);
+            p.textSize(22);
             p.text('Engine Size (L)', (innerLeft + innerRight) / 2, innerBottom + 28);
 
             p.push();
@@ -191,7 +191,7 @@
             // Title
             // -------------------------------------------------------------
             p.textAlign(p.CENTER, p.BOTTOM);
-            p.textSize(14);
+            p.textSize(28);
             p.text('CO₂ Emissions vs Engine Size', left + w / 2, innerTop - 28);
 
             // -------------------------------------------------------------
@@ -224,7 +224,7 @@
                 // label
                 p.fill(activeMode === b.mode ? 255 : 0);
                 p.textAlign(p.CENTER, p.CENTER);
-                p.textSize(12);
+                p.textSize(14);
                 p.text(b.label, bx + b.w / 2, btnY + b.h / 2);
             }
 
@@ -343,7 +343,7 @@
             // -------------------------------------------------------------
             // Legend
             // -------------------------------------------------------------
-            p.textSize(11);
+            p.textSize(13);
             p.fill(60);
             p.textAlign(p.LEFT, p.TOP);
 

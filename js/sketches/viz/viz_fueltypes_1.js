@@ -73,7 +73,7 @@
 
             p.fill(0);
             p.textAlign(p.LEFT, p.TOP);
-            p.textSize(14);
+            p.textSize(24);
             p.text('Fuel Types: Where Emissions Begin (Petrol vs Diesel)',
                    cardX + 12, cardY + 10);
 
@@ -94,7 +94,7 @@
 
             // y label
             p.noStroke();
-            p.textSize(11);
+            p.textSize(18);
             p.push();
             p.translate(cardX + 20, (innerTop + innerBottom) / 2);
             p.rotate(-Math.PI / 2);
@@ -104,7 +104,7 @@
             p.pop();
 
             // y ticks 0–200
-            p.textSize(10);
+            p.textSize(14);
             p.fill(60);
             var yticks = 4;
             for (var yi = 0; yi <= yticks; yi++) {
@@ -150,7 +150,7 @@
 
                 // category label
                 p.fill(0);
-                p.textSize(11);
+                p.textSize(22);
                 p.text(cat, bx + barWidth / 2, baseY + 4);
 
                 // hover detection

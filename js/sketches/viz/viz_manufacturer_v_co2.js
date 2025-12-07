@@ -114,7 +114,7 @@
             // ✓✓ NEW SORT BUTTON (REAL BUTTON)
             // ================================================================
             var sortLabel = "Sort: " + window.VizBar2.sortMode;
-            p.textSize(12);
+            p.textSize(18);
             var tw = p.textWidth(sortLabel);
 
             var bw = tw + 20;      // button width
@@ -150,14 +150,14 @@
             p.textSize(14);
             p.text("Average CO₂ Emissions by Manufacturer (NEDC)", left + availW / 2, top - 4);
 
-            p.textSize(11);
+            p.textSize(21);
             p.textAlign(p.CENTER, p.TOP);
-            p.text("Petrol & diesel cars only (this dataset)", left + availW / 2, top + 4);
+            p.text("Average CO₂ Emissions by Manufacturer", left + availW / 2, top + 4);
 
             var plotTop = top + 30;
 
             // --- 3. Draw bars ------------------------------------------------
-            p.textSize(12);
+            p.textSize(16);
             for (var i = 0; i < bars.length; i++) {
                 var m = bars[i];
                 var y = plotTop + i * rowH + rowH / 2;
