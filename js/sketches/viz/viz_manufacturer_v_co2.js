@@ -9,7 +9,7 @@
 
         cycleSort: function () {
             if (this.sortMode === "co2") this.sortMode = "count";
-            else if (this.sortMode === "count") this.sortMode = "alpha";
+            else if (this.sortMode === "count") this.sortMode = "name";
             else this.sortMode = "co2";
 
             window._vizbar2_needsRecalc = true;
