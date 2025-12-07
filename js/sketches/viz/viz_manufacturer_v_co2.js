@@ -1,5 +1,5 @@
 // viz_bar.js
-// Average CO₂ emissions by manufacturer (horizontal bar chart)
+// Average CO₂ emissions by manufacturer, dual-mode (combined OR petrol vs diesel)
 (function () {
 
     window.VizBar2 = {
@@ -7,12 +7,19 @@
         // sorting mode: "co2" | "count" | "name"
         sortMode: "co2",
 
+        // bar mode: "dual" (petrol + diesel) or "combined" (single blue bar)
+        barMode: "dual",
+
         cycleSort: function () {
             if (this.sortMode === "co2") this.sortMode = "count";
             else if (this.sortMode === "count") this.sortMode = "name";
             else this.sortMode = "co2";
-
             window._vizbar2_needsRecalc = true;
+        },
+
+        toggleMode: function () {
+            this.barMode = (this.barMode === "dual" ? "combined" : "dual");
+            // no need to recalc — same data
         },
 
         draw: function (p, manager, ai, progress) {
@@ -23,7 +30,9 @@
             var availW = (manager.width || 600) - 40;
             var availH = (manager.height || 520) - 60;
 
-            // click handler (only attach once)
+            //------------------------------------------------------------------
+            // ONE-TIME CLICK HANDLER
+            //------------------------------------------------------------------
             if (!window._vizbar2_clickBound) {
                 window._vizbar2_clickBound = true;
 
@@ -31,78 +40,119 @@
                     var rect = p.canvas.getBoundingClientRect();
                     var mx = evt.clientX - rect.left;
                     var my = evt.clientY - rect.top;
-
                     if (manager.state.activeIndex !== 4) return;
 
+                    // Sort button
                     var b = window._vizbar2_btn;
                     if (b && mx >= b.x1 && mx <= b.x2 && my >= b.y1 && my <= b.y2) {
                         window.VizBar2.cycleSort();
+                        return;
+                    }
+
+                    // Mode button
+                    var m = window._vizbar2_modeBtn;
+                    if (m && mx >= m.x1 && mx <= m.x2 && my >= m.y1 && my <= m.y2) {
+                        window.VizBar2.toggleMode();
+                        return;
                     }
                 });
             }
 
-            // --- 1. Aggregate by manufacturer (cached unless sorting changed) -----------------------
+            //------------------------------------------------------------------
+            // 1. AGGREGATE MANUFACTURER STATS
+            //------------------------------------------------------------------
             if (!manager._manufacturerBars || window._vizbar2_needsRecalc) {
 
                 window._vizbar2_needsRecalc = false;
 
-                var agg = {}; // { name: { sum: X, count: Y } }
+                var agg = {};  
+                // { manu: { pSum, pCount, dSum, dCount } }
 
                 for (var i = 0; i < data.length; i++) {
                     var row = data[i];
                     var manu = row.make;
-                    var co2 = parseFloat(row.co2_nedc_gpkm);
+                    if (!manu || !manu.trim()) continue;
 
-                    if (!manu || manu.trim() === "") continue;
+                    var co2 = parseFloat(row.co2_nedc_gpkm);
                     if (isNaN(co2)) continue;
 
-                    if (!agg[manu]) agg[manu] = { sum: 0, count: 0 };
-                    agg[manu].sum += co2;
-                    agg[manu].count += 1;
-                }
+                    var rawFuel =
+                        (row.fuel_type || row.fuel || row.fueltype || row.fuelType || "")
+                        .toString().toLowerCase();
 
-                // Convert to array and apply filters
-                var arr = [];
-                for (var k in agg) {
-                    if (agg[k].count >= 5) {
-                        arr.push({
-                            name: k,
-                            avg: agg[k].sum / agg[k].count,
-                            count: agg[k].count
-                        });
+                    var fuel = null;
+                    if (rawFuel.includes("petrol") || rawFuel.includes("gasoline")) fuel = "petrol";
+                    else if (rawFuel.includes("diesel")) fuel = "diesel";
+                    else continue;
+
+                    if (!agg[manu]) agg[manu] = { pSum: 0, pCount: 0, dSum: 0, dCount: 0 };
+
+                    if (fuel === "petrol") {
+                        agg[manu].pSum += co2;
+                        agg[manu].pCount++;
+                    } else {
+                        agg[manu].dSum += co2;
+                        agg[manu].dCount++;
                     }
                 }
 
-                // Limit to top 10 by count before sorting
-                arr.sort((a, b) => b.count - a.count);
+                // Convert to array
+                var arr = [];
+                for (var k in agg) {
+                    var o = agg[k];
+                    var total = o.pCount + o.dCount;
+                    if (total < 5) continue;
+
+                    var petrolAvg = (o.pCount > 0 ? o.pSum / o.pCount : null);
+                    var dieselAvg = (o.dCount > 0 ? o.dSum / o.dCount : null);
+                    var combinedAvg = (o.pSum + o.dSum) / total;
+
+                    arr.push({
+                        name: k,
+                        petrol: petrolAvg,
+                        diesel: dieselAvg,
+                        combined: combinedAvg,
+                        pCount: o.pCount,
+                        dCount: o.dCount,
+                        total: total
+                    });
+                }
+
+                // Top 10 by total cars
+                arr.sort((a, b) => b.total - a.total);
                 arr = arr.slice(0, 10);
 
-                // Sorting modes
-                if (window.VizBar2.sortMode === "co2") {
-                    arr.sort((a, b) => b.avg - a.avg);
-                }
-                else if (window.VizBar2.sortMode === "count") {
-                    arr.sort((a, b) => b.count - a.count);
-                }
-                else if (window.VizBar2.sortMode === "name") {
-                    arr.sort((a, b) => a.name.localeCompare(b.name));
-                }
+                // Sorting
+                if (this.sortMode === "co2") arr.sort((a, b) => b.combined - a.combined);
+                else if (this.sortMode === "count") arr.sort((a, b) => b.total - a.total);
+                else arr.sort((a, b) => a.name.localeCompare(b.name));
 
                 manager._manufacturerBars = arr;
             }
 
-            var bars = manager._manufacturerBars || [];
-            if (bars.length === 0) {
+            var bars = manager._manufacturerBars;
+
+            if (!bars || bars.length === 0) {
                 p.textAlign(p.CENTER, p.CENTER);
                 p.fill(0);
-                p.text("No manufacturer CO₂ data available.", left + availW / 2, top + availH / 2);
+                p.text("No manufacturer CO₂ data found.", left + availW / 2, top + availH / 2);
                 return;
             }
 
-            // --- 2. Scaling --------------------------------------------------
-            var maxAvg = 0;
-            for (var i = 0; i < bars.length; i++) {
-                if (bars[i].avg > maxAvg) maxAvg = bars[i].avg;
+            //------------------------------------------------------------------
+            // 2. DETERMINE SCALE MAX (DIFFERENT FOR DUAL VS COMBINED)
+            //------------------------------------------------------------------
+            var maxVal = 0;
+
+            if (this.barMode === "combined") {
+                for (var i = 0; i < bars.length; i++) {
+                    if (bars[i].combined > maxVal) maxVal = bars[i].combined;
+                }
+            } else {
+                for (var i = 0; i < bars.length; i++) {
+                    if (bars[i].petrol && bars[i].petrol > maxVal) maxVal = bars[i].petrol;
+                    if (bars[i].diesel && bars[i].diesel > maxVal) maxVal = bars[i].diesel;
+                }
             }
 
             var rowH = availH / bars.length;
@@ -110,78 +160,139 @@
 
             p.push();
 
-            // ================================================================
-            // ✓✓ NEW SORT BUTTON (REAL BUTTON)
-            // ================================================================
-            var sortLabel = "Sort: " + window.VizBar2.sortMode;
+            //------------------------------------------------------------------
+            // Sort Button
+            //------------------------------------------------------------------
+            var mx = p.mouseX, my = p.mouseY;
+
+            var sortLabel = "Sort: " + this.sortMode;
             p.textSize(18);
             var tw = p.textWidth(sortLabel);
-
-            var bw = tw + 20;      // button width
-            var bh = 24;           // button height
-            var bx = left + availW - bw; // right-align
+            var bw = tw + 20;
+            var bh = 24;
+            var bx = left + availW - bw;
             var by = top + 2;
 
-            // Hover detection
-            var mx = p.mouseX;
-            var my = p.mouseY;
-            var isHover = (mx >= bx && mx <= bx + bw && my >= by && my <= by + bh);
+            var hoverSort = (mx >= bx && mx <= bx + bw && my >= by && my <= by + bh);
 
-            // Button background
-            if (isHover) p.fill(235);
-            else p.fill(245);
-
+            p.fill(hoverSort ? 235 : 245);
             p.stroke(0, 50);
             p.rect(bx, by, bw, bh, 6);
 
-            // Button label
             p.noStroke();
             p.fill(0);
             p.textAlign(p.CENTER, p.CENTER);
             p.text(sortLabel, bx + bw / 2, by + bh / 2);
 
-            // Expose click-hitbox for event listener
             window._vizbar2_btn = { x1: bx, y1: by, x2: bx + bw, y2: by + bh };
 
-            // ================================================================
-            // Title + subtitle
-            // ================================================================
-            p.textAlign(p.CENTER, p.BOTTOM);
+            //------------------------------------------------------------------
+            // Mode Toggle Button ("Mode: dual" or "Mode: combined")
+            //------------------------------------------------------------------
+            var modeLabel = "Mode: " + this.barMode;
+            p.textSize(18);
+            var tw2 = p.textWidth(modeLabel);
+            var bw2 = tw2 + 24;
+            var bh2 = 24;
+
+            var bx2 = bx - bw2 - 10; // sits left of sort button
+            var by2 = by;
+
+            var hoverMode = (mx >= bx2 && mx <= bx2 + bw2 && my >= by2 && my <= by2 + bh2);
+
+            p.fill(hoverMode ? 235 : 245);
+            p.stroke(0, 50);
+            p.rect(bx2, by2, bw2, bh2, 6);
+
+            p.noStroke();
+            p.fill(0);
+            p.textAlign(p.CENTER, p.CENTER);
+            p.text(modeLabel, bx2 + bw2 / 2, by2 + bh2 / 2);
+
+            window._vizbar2_modeBtn = { x1: bx2, y1: by2, x2: bx2 + bw2, y2: by2 + bh2 };
+
+            //------------------------------------------------------------------
+            // Titles
+            //------------------------------------------------------------------
             p.textSize(14);
-            p.text("Average CO₂ Emissions by Manufacturer (NEDC)", left + availW / 2, top - 4);
+            p.textAlign(p.CENTER, p.BOTTOM);
+            p.text(
+                this.barMode === "combined"
+                ? "Combined Fleet CO₂ Emissions (NEDC)"
+                : "Petrol vs Diesel CO₂ Emissions (NEDC)",
+                left + availW / 2,
+                top - 4
+            );
 
             p.textSize(21);
             p.textAlign(p.CENTER, p.TOP);
-            p.text("Average CO₂ Emissions by Manufacturer", left + availW / 2, top + 4);
+            p.text("Average CO₂ Emissions by Manufacturer",
+                   left + availW / 2, top + 4);
 
-            var plotTop = top + 30;
+            var plotTop = top + 34;
 
-            // --- 3. Draw bars ------------------------------------------------
+            //------------------------------------------------------------------
+            // 3. DRAW ROWS
+            //------------------------------------------------------------------
             p.textSize(16);
+
             for (var i = 0; i < bars.length; i++) {
                 var m = bars[i];
-                var y = plotTop + i * rowH + rowH / 2;
+                var yCenter = plotTop + i * rowH + rowH / 2;
 
-                // manufacturer name
+                // Manufacturer name
                 p.fill(30);
                 p.textAlign(p.LEFT, p.CENTER);
-                p.text(m.name, left, y);
+                p.text(m.name, left, yCenter);
 
-                var bw2 = (m.avg / maxAvg) * barMaxW;
-                var bx2 = left + 120;
-                var by2 = y - (rowH * 0.35);
-                var bh2 = rowH * 0.7;
+                var baseX = left + 120;
 
-                // bar
-                p.fill(80, 150, 200, 220);
-                p.noStroke();
-                p.rect(bx2, by2, bw2, bh2, 3);
+                // ------------------------------
+                // COMBINED MODE (BLUE BARS)
+                // ------------------------------
+                if (this.barMode === "combined") {
 
-                // numeric label
-                p.fill(0);
-                p.textAlign(p.LEFT, p.CENTER);
-                var label = Math.round(m.avg) + " g/km";
-                p.text(label, bx2 + bw2 + 6, y);
+                    var w = (m.combined / maxVal) * barMaxW;
+
+                    p.fill(80, 150, 200, 220);
+                    p.noStroke();
+                    p.rect(baseX, yCenter - rowH * 0.25, w, rowH * 0.5, 4);
+
+                    p.fill(0);
+                    p.textAlign(p.LEFT, p.CENTER);
+                    p.text(Math.round(m.combined) + " g/km",
+                           baseX + w + 6, yCenter);
+
+                    continue;
+                }
+
+                // ------------------------------
+                // DUAL MODE (PETROL + DIESEL)
+                // ------------------------------
+                var barH = rowH * 0.28;
+
+                var yPetrol = yCenter - barH - 2;
+                var yDiesel = yCenter + 2;
+
+                if (m.petrol !== null) {
+                    var wP = (m.petrol / maxVal) * barMaxW;
+                    p.fill(240, 140, 40, 220); // orange
+                    p.rect(baseX, yPetrol - barH / 2, wP, barH, 3);
+
+                    p.fill(0);
+                    p.textAlign(p.LEFT, p.CENTER);
+                    p.text(Math.round(m.petrol) + " g/km", baseX + wP + 6, yPetrol);
+                }
+
+                if (m.diesel !== null) {
+                    var wD = (m.diesel / maxVal) * barMaxW;
+                    p.fill(60, 170, 70, 220); // green
+                    p.rect(baseX, yDiesel - barH / 2, wD, barH, 3);
+
+                    p.fill(0);
+                    p.textAlign(p.LEFT, p.CENTER);
+                    p.text(Math.round(m.diesel) + " g/km", baseX + wD + 6, yDiesel);
+                }
             }
 
             p.pop();
