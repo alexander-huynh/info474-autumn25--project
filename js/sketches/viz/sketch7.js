@@ -252,7 +252,7 @@
             p.fill(0);
             p.textAlign(p.LEFT, p.TOP);
             p.textSize(14);
-            p.text("Visual 7 – Search Your Car: See How It Compares",
+            p.text("Visual 7 – Search Your Carr: See How It Compares",
                 cardX + 12, cardY + 10);
 
             p.textSize(12);
