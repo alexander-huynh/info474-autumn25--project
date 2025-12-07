@@ -228,13 +228,19 @@
       }
 
       //------------------------------------------------------------------
-      // Scatter points
+      // Scatter points (colored by fuel type)
       //------------------------------------------------------------------
+      var dotColors = {
+        Petrol: p.color(255, 140, 0, 160),  // orange
+        Diesel: p.color(34, 139, 34, 160)   // green
+      };
+
       p.noStroke();
+
       for (var k = 0; k < pts.length; k++) {
         var d2 = pts[k];
         var x = p.map(d2.powerKw, minPower, maxPower, innerLeft, innerRight);
-        var y = p.map(d2.co2,     minCo2,   maxCo2,   innerBottom, innerTop);
+        var y = p.map(d2.co2, minCo2, maxCo2, innerBottom, innerTop);
 
         screenPts.push({
           x: x,
@@ -244,10 +250,13 @@
           fuel: d2.fuel
         });
 
-        var fade = p.map(d2.powerKw, minPower, maxPower, 30, 110);
-        p.fill(100, 100, 100, fade);
+        // choose color based on fuel type
+        var col = dotColors[d2.fuel] || p.color(120, 120, 120, 140);
+
+        p.fill(col);
         p.circle(x, y, 3.5);
       }
+
 
       //------------------------------------------------------------------
       // Hover detection

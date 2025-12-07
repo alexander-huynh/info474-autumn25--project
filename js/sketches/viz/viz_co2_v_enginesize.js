@@ -230,10 +230,14 @@
 
 
             // -------------------------------------------------------------
-            // Draw points + record screen coords
+            // Draw points + record screen coords (colored by fuel)
             // -------------------------------------------------------------
+            var dotColors = {
+                Petrol: p.color(255, 140, 0, 170),   // orange
+                Diesel: p.color(34, 139, 34, 170)    // green
+            };
+
             p.noStroke();
-            p.fill(100, 100, 100, 120);
 
             for (var j = 0; j < pts.length; j++) {
                 var dpt = pts[j];
@@ -249,8 +253,12 @@
                     co2: dpt.co2
                 });
 
+                // fuel-based color
+                p.fill(dotColors[dpt.fuel] || p.color(100, 100, 100, 150));
+
                 p.circle(x, y, 4);
             }
+
 
             // -------------------------------------------------------------
             // Hover highlight
