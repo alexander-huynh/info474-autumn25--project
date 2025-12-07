@@ -9,7 +9,7 @@
 }
 
 #graphic {
-  padding-top: 40px;
+  padding-top: 40px; /* good spacing before first block */
 }
 
 /* Remove left-column width & inline-block */
@@ -19,9 +19,14 @@
   padding-bottom: 200px;
 }
 
+/* First section top breathing room */
+.step:first-of-type {
+  margin-top: 40px;
+}
+
 /* Each text step */
 .step {
-  margin-bottom: 140px;
+  margin-bottom: 60px; /* clean modern section spacing */
   font-family: "TiemposTextWeb-Regular","Georgia";
   font-size: 18px;
   line-height: 26px;
@@ -37,11 +42,15 @@
   line-height: 1.3em;
 }
 
-/* Visualization slot that appears after each section */
+/* Visualization slot after each section */
 .vis-slot {
   width: 100%;
   min-height: 400px;
-  margin: 40px 0 100px 0;
+
+  /* clean modern viz spacing rhythm */
+  margin-top: 40px; 
+  margin-bottom: 80px;
+
   display: block;
 }
 
