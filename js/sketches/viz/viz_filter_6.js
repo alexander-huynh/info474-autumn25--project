@@ -373,7 +373,7 @@
                 p.text(
                     "Top matching cars (lowest CO\u2082 first)\n" +
                     "Showing " + shown + " of " + totalCount +
-                    " matches (page " + (pageIndex + 1) + " of " + (maxPageIndex + 1) + "):",
+                    " matches (" + (pageIndex + 1) + " of " + (maxPageIndex + 1) + "):",
                     listX, listY
                 );
 
