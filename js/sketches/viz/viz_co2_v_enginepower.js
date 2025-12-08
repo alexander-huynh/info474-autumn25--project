@@ -130,9 +130,9 @@
       }
 
       minPower = Math.max(minPower, 0);
-      maxPower = Math.min(maxPower, 500);
+      maxPower = Math.min(maxPower, 900);
       minCo2   = Math.max(minCo2, 0);
-      maxCo2   = Math.min(maxCo2, 500);
+      maxCo2   = Math.min(maxCo2, 5050);
 
       //------------------------------------------------------------------
       // Layout region
@@ -226,7 +226,8 @@
       //------------------------------------------------------------------
       // PROMPT 4 — BUTTON DRAWING
       //------------------------------------------------------------------
-      var btnY = innerTop + 10;
+      var subtitleBottomY = innerTop - 24 + 14;
+      var btnY = subtitleBottomY + 6;
       var activeMode = manager.fuelFilter || "All";
 
       var totalW = btns[0].w + btns[1].w + btns[2].w + 20 + 20;
