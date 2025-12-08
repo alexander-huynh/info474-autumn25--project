@@ -289,7 +289,6 @@
                 var d = data[idx];
                 var co2   = getCo2(d);
                 var hp    = getHP(d);
-                var price = getPrice(d);
                 var fuel  = mapFuelCategory(getFuelRaw(d));
 
                 if (!isFinite(co2) || !isFinite(hp)) continue;
@@ -302,7 +301,6 @@
                     model: getModel(d),
                     co2:   co2,
                     hp:    hp,
-                    price: price,
                     fuel:  fuel
                 });
             }
@@ -338,14 +336,12 @@
                 var rowH    = 20;
                 var headerH = 22;
 
-                // Column definitions – give Make & Model more space,
-                // and keep total width reasonable inside the card.
+                // Column definitions – redistribute the price width to Make & Model.
                 var cols = [
                     { label: "#",             width: 24 },
-                    { label: "Make & Model",  width: 210 },
+                    { label: "Make & Model",  width: 260 },
                     { label: "CO\u2082 (g/km)", width: 70 },
                     { label: "HP",            width: 45 },
-                    { label: "Price",         width: 75 },
                     { label: "Fuel",          width: 55 }
                 ];
 
@@ -372,17 +368,6 @@
                 for (var k = 0; k < maxShown; k++) {
                     var car = filtered[k];
 
-                    var priceText;
-                    if (isFinite(car.price)) {
-                        if (car.price >= 1000) {
-                            priceText = "\u20ac" + (car.price / 1000).toFixed(1) + "k";
-                        } else {
-                            priceText = "\u20ac" + car.price.toFixed(0);
-                        }
-                    } else {
-                        priceText = "n/a";
-                    }
-
                     var rowY = tableY + headerH + k * rowH;
 
                     // Optional zebra striping
@@ -398,14 +383,13 @@
 
                     var makeModel = car.make + " " + car.model;
                     // Truncate so it doesn't bleed into the next column
-                    makeModel = shorten(makeModel, 26); // tweak 26 if needed
+                    makeModel = shorten(makeModel, 30); // slightly more room now
 
                     var cells = [
                         String(k + 1),
                         makeModel,
                         car.co2.toFixed(0),
                         car.hp.toFixed(0),
-                        priceText,
                         car.fuel
                     ];
 
