@@ -35,6 +35,34 @@
       screenPts = [];
       hoverIndex = -1;
 
+      //------------------------------------------------------------------
+      // ONE-TIME CLICK HANDLER
+      //------------------------------------------------------------------
+      if (!window._vizscatter2_clickBound) {
+        window._vizscatter2_clickBound = true;
+
+        p.canvas.addEventListener("mousedown", function (evt) {
+          var rect = p.canvas.getBoundingClientRect();
+          var mx = evt.clientX - rect.left;
+          var my = evt.clientY - rect.top;
+          
+          // Only process if this viz is active (index 3)
+          if (manager.state.activeIndex !== 3) return;
+
+          // Check fuel filter buttons
+          for (var bi = 0; bi < btns.length; bi++) {
+            var b = btns[bi];
+            if (
+              mx >= b.x && mx <= b.x + b.w &&
+              my >= b.y && my <= b.y + b.h
+            ) {
+              manager.fuelFilter = b.mode;
+              return;
+            }
+          }
+        });
+      }
+
       p.background(255);
       p.fill(0);
       p.textAlign(p.CENTER, p.CENTER);
@@ -185,14 +213,14 @@
       //------------------------------------------------------------------
       p.textAlign(p.CENTER, p.BOTTOM);
       p.textSize(28);
-      p.text('CO₂ Emissions vs Engine Power (kW)', left + w / 2, innerTop - 26);
+      p.text('CO₂ Emissions vs Engine Power (kW)', left + w / 2, innerTop - 32);
 
       p.textSize(14);
       p.textAlign(p.CENTER, p.TOP);
       p.text(
         'Higher power generally means higher CO₂ — but the pattern is much noisier than engine size.',
         left + w / 2,
-        innerTop - 14
+        innerTop - 24
       );
 
       //------------------------------------------------------------------
@@ -211,6 +239,14 @@
 
         b.x = bx;
         b.y = by;
+
+        // Store global coordinates (for consistency with viz_bar pattern)
+        window['_vizscatter2_btn' + bi] = {
+          x1: bx,
+          y1: by,
+          x2: bx + b.w,
+          y2: by + b.h
+        };
 
         if (activeMode === b.mode) {
           p.fill(40, 110, 220);
@@ -311,27 +347,9 @@
         p.text(text1, bx + padding, by + 4);
         p.text(text2, bx + padding, by + 16);
       }
-    },
-
-    //----------------------------------------------------------------------
-    // CLICK HANDLER FOR PROMPT 4 BUTTONS
-    //----------------------------------------------------------------------
-    mousePressed: function (p, manager) {
-      var mx = p.mouseX;
-      var my = p.mouseY;
-
-      for (var bi = 0; bi < btns.length; bi++) {
-        var b = btns[bi];
-        if (
-          mx >= b.x && mx <= b.x + b.w &&
-          my >= b.y && my <= b.y + b.h
-        ) {
-          manager.fuelFilter = b.mode;
-          return true;
-        }
-      }
-      return false;
     }
+
+    // mousePressed function removed - now using direct canvas event listener
 
   };
 

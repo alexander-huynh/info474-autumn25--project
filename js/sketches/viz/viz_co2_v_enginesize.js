@@ -33,6 +33,34 @@
             screenPts  = [];
             hoverIndex = -1;
 
+            //------------------------------------------------------------------
+            // ONE-TIME CLICK HANDLER
+            //------------------------------------------------------------------
+            if (!window._vizscatter_clickBound) {
+                window._vizscatter_clickBound = true;
+
+                p.canvas.addEventListener("mousedown", function (evt) {
+                    var rect = p.canvas.getBoundingClientRect();
+                    var mx = evt.clientX - rect.left;
+                    var my = evt.clientY - rect.top;
+                    
+                    // Only process if this viz is active (index 2)
+                    if (manager.state.activeIndex !== 2) return;
+
+                    // Check fuel filter buttons
+                    for (var bi = 0; bi < btns.length; bi++) {
+                        var b = btns[bi];
+                        if (
+                            mx >= b.x && mx <= b.x + b.w &&
+                            my >= b.y && my <= b.y + b.h
+                        ) {
+                            manager.fuelFilter = b.mode;
+                            return;
+                        }
+                    }
+                });
+            }
+
             p.background(255);
 
             if (!data.length) {
@@ -214,6 +242,14 @@
                 b.x = bx;
                 b.y = btnY;
 
+                // Store global coordinates (for consistency with viz_bar pattern)
+                window['_vizscatter_btn' + bi] = {
+                    x1: bx,
+                    y1: btnY,
+                    x2: bx + b.w,
+                    y2: btnY + b.h
+                };
+
                 // background
                 if (activeMode === b.mode) p.fill(40, 110, 220);
                 else p.fill(230);
@@ -371,28 +407,9 @@
             p.textAlign(p.CENTER, p.TOP);
             p.text("Data source: European Vehicle CO₂ Dataset (NEDC)",
                    left + w / 2, top + h - 5);
-        },
-
-        //------------------------------------------------------------------
-        // CLICK HANDLER (Fuel filter buttons)
-        //------------------------------------------------------------------
-        mousePressed: function (p, manager) {
-            var mx = p.mouseX;
-            var my = p.mouseY;
-
-            for (var bi = 0; bi < btns.length; bi++) {
-                var b = btns[bi];
-                if (
-                    mx >= b.x && mx <= b.x + b.w &&
-                    my >= b.y && my <= b.y + b.h
-                ) {
-                    manager.fuelFilter = b.mode;
-                    return true;
-                }
-            }
-
-            return false;
         }
+
+        // mousePressed function removed - now using direct canvas event listener
     };
 
 })();
