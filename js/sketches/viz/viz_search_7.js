@@ -169,7 +169,7 @@
                 } else if (searchQuery.length > 0) {
                     searchQuery = searchQuery.slice(0, -1);
                 }
-                return;
+                return false;
             }
 
             if (p.keyCode === p.ENTER || p.keyCode === p.RETURN) {
@@ -245,34 +245,39 @@
             var cardW = w - 40;
             var cardH = h - 40;
 
-            // white card, light border
-            p.stroke(220);
-            p.strokeWeight(1);
+            // white card, NO border
+            p.noStroke();
             p.fill(255);
             p.rect(cardX, cardY, cardW, cardH, 6);
 
             // title + subtitle
             p.fill(0);
             p.textAlign(p.LEFT, p.TOP);
-            p.textSize(24);
+            p.textSize(14);
             p.text("How Does Your Car Compare?", cardX + 12, cardY + 10);
 
-            p.textSize(16);
+            p.textSize(11);
             p.fill(90);
-            p.text("Search your car model to compare its CO\u2082 and power to the dataset average.",
-                cardX + 12, cardY + 38);
+            p.text(
+                "Search your car model to compare its CO\u2082 and power to the dataset average.",
+                cardX + 12,
+                cardY + 30
+            );
 
             // search label
-            p.textSize(16);
+            p.textSize(12);
             p.fill(0);
-            p.text("Search car model (type and press Enter):",
-                cardX + 40, cardY + 70);
+            p.text(
+                "Search car model (type and press Enter):",
+                cardX + 40,
+                cardY + 60
+            );
 
             // faux input box
             var inputX = cardX + 40;
-            var inputY = cardY + 95;
+            var inputY = cardY + 80;
             var inputW = cardW - 80;
-            var inputH = 32;
+            var inputH = 26;
 
             inputBounds = { x: inputX, y: inputY, w: inputW, h: inputH };
 
@@ -283,7 +288,7 @@
 
             p.noStroke();
             p.textAlign(p.LEFT, p.CENTER);
-            p.textSize(14);
+            p.textSize(12);
 
             // placeholder is just the initial text; draw it lighter when unfocused
             if (isPlaceholder && !inputFocused) {
@@ -307,25 +312,25 @@
             p.fill(0);
 
             var infoX = cardX + 40;
-            var infoY = cardY + 145;
+            var infoY = cardY + 120;
 
             if (!searchHasRun) {
-                p.textSize(14);
                 p.text(
                     "Start typing the name of your car and press Enter.\n" +
-                    "We'll look it up in the EU emissions dataset and show how it compares\n" +
-                    "to the average car in terms of CO\u2082 and horsepower.",
-                    infoX, infoY
+                        "We’ll look it up in the EU emissions dataset and show how it compares\n" +
+                        "to the average car in terms of CO\u2082 and horsepower.",
+                    infoX,
+                    infoY
                 );
                 return;
             }
 
             if (!lastResult) {
-                p.textSize(14);
                 p.text(
                     "No matching cars found in the dataset.\n" +
-                    "Try a shorter or simpler search (for example just 'Golf' or 'Prius').",
-                    infoX, infoY
+                        "Try a shorter or simpler search (for example just 'Golf' or 'Prius').",
+                    infoX,
+                    infoY
                 );
                 return;
             }
@@ -334,35 +339,42 @@
             var car = lastResult;
 
             var lineY = infoY;
-            p.textSize(16);
-            p.text("Closest match:", infoX, lineY); lineY += 24;
+            p.textSize(13);
+            p.text("Closest match:", infoX, lineY);
+            lineY += 20;
 
-            p.textSize(20);
+            p.textSize(15);
             p.text(car.make + " " + car.model, infoX, lineY);
-            lineY += 28;
+            lineY += 22;
 
-            p.textSize(14);
+            p.textSize(12);
 
             var engText = isFinite(car.engine) ? car.engine.toFixed(0) + " cc" : "n/a";
             p.text(
-                "Fuel: " + car.fuel +
-                "    |    Engine: " + engText,
-                infoX, lineY
+                "Fuel: " + car.fuel + "    |    Engine: " + engText,
+                infoX,
+                lineY
             );
             lineY += 18;
 
             p.text(
-                "Your car – CO\u2082: " + car.co2.toFixed(0) + " g/km,  HP: " +
-                car.hp.toFixed(0),
-                infoX, lineY
+                "Your car – CO\u2082: " +
+                    car.co2.toFixed(0) +
+                    " g/km,  HP: " +
+                    car.hp.toFixed(0),
+                infoX,
+                lineY
             );
             lineY += 18;
 
             if (isFinite(avgCo2) && isFinite(avgHp)) {
                 p.text(
-                    "Dataset average – CO\u2082: " + avgCo2.toFixed(0) +
-                    " g/km,  HP: " + avgHp.toFixed(0),
-                    infoX, lineY
+                    "Dataset average – CO\u2082: " +
+                        avgCo2.toFixed(0) +
+                        " g/km,  HP: " +
+                        avgHp.toFixed(0),
+                    infoX,
+                    lineY
                 );
                 lineY += 20;
 
@@ -370,33 +382,41 @@
                 var dHp = car.hp - avgHp;
 
                 var co2Phrase =
-                    (Math.abs(dCo2) < 1) ? "about the same emissions as" :
-                        (dCo2 < 0 ? Math.abs(dCo2).toFixed(0) + " g/km lower CO\u2082 than" :
-                            dCo2.toFixed(0) + " g/km higher CO\u2082 than");
+                    Math.abs(dCo2) < 1
+                        ? "about the same emissions as"
+                        : dCo2 < 0
+                        ? Math.abs(dCo2).toFixed(0) + " g/km lower CO\u2082 than"
+                        : dCo2.toFixed(0) + " g/km higher CO\u2082 than";
 
                 var hpPhrase =
-                    (Math.abs(dHp) < 1) ? "about the same power as" :
-                        (dHp > 0 ? dHp.toFixed(0) + " more HP than" :
-                            Math.abs(dHp).toFixed(0) + " less HP than");
+                    Math.abs(dHp) < 1
+                        ? "about the same power as"
+                        : dHp > 0
+                        ? dHp.toFixed(0) + " more HP than"
+                        : Math.abs(dHp).toFixed(0) + " less HP than";
 
                 p.text(
-                    "Interpretation: your car has " + co2Phrase +
-                    " the average car,\n" +
-                    "and " + hpPhrase + " the average car in this dataset.",
-                    infoX, lineY
+                    "Interpretation: your car has " +
+                        co2Phrase +
+                        " the average car,\n" +
+                        "and " +
+                        hpPhrase +
+                        " the average car in this dataset.",
+                    infoX,
+                    lineY
                 );
             }
 
             // simple horizontal comparison bar for CO2
             if (isFinite(avgCo2)) {
                 var barX = cardX + 40;
-                var barY = cardY + cardH - 90;
+                var barY = cardY + cardH - 80;
                 var barW = cardW - 80;
-                var barH = 14;
+                var barH = 10;
 
-                p.textSize(14);
+                p.textSize(12);
                 p.fill(0);
-                p.text("CO\u2082 comparison (lower is better):", barX, barY - 20);
+                p.text("CO\u2082 comparison (lower is better):", barX, barY - 18);
 
                 var maxScale = Math.max(avgCo2, car.co2) * 1.2;
 
@@ -405,14 +425,13 @@
                 var avgLen = barW * (avgCo2 / maxScale);
                 p.rect(barX, barY, avgLen, barH, 3);
                 p.fill(90);
-                p.textSize(14);
-                p.text("Average", barX + avgLen + 8, barY - 2);
+                p.text("Average", barX + avgLen + 6, barY - 2);
 
                 p.fill(40, 120, 200);
                 var carLen = barW * (car.co2 / maxScale);
-                p.rect(barX, barY + 22, carLen, barH, 3);
+                p.rect(barX, barY + 18, carLen, barH, 3);
                 p.fill(40, 80, 140);
-                p.text("Your car", barX + carLen + 8, barY + 20);
+                p.text("Your car", barX + carLen + 6, barY + 16);
             }
         }
     };
