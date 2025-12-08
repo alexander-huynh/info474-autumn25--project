@@ -2,11 +2,12 @@
 // CO₂ NEDC (g/km) vs Engine Power (kW)
 // Static scatterplot with trimmed axis ranges, density fading,
 // lighter gridlines, improved spacing
-// + (PROMPT 1) fuel-type extraction added here
-// + (PROMPT 1) on-screen point storage
-// + (PROMPT 2) hover detection + highlight
-// + (PROMPT 3) fuel FILTER LOGIC (All / Petrol / Diesel)
-// + (PROMPT 4) clickable filter buttons (All / Petrol / Diesel)
+// + fuel-type extraction
+// + on-screen point storage
+// + hover detection + highlight
+// + fuel FILTER LOGIC (All / Petrol / Diesel)
+// + clickable filter buttons (All / Petrol / Diesel)
+// + Guide toggle with power category bands
 
 (function () {
 
@@ -19,6 +20,12 @@
     { label: "Petrol", mode: "Petrol", x: 0, y: 0, w: 70, h: 24 },
     { label: "Diesel", mode: "Diesel", x: 0, y: 0, w: 70, h: 24 }
   ];
+
+  // ---------------------------------------------------------
+  // Guide toggle (bands)
+  // ---------------------------------------------------------
+  var showBands = false;
+  var bandsBtn = { label: "Guide", x: 0, y: 0, w: 65, h: 24 };
 
   window.VizScatter2 = {
 
@@ -60,6 +67,13 @@
               return;
             }
           }
+
+          // Check bands toggle button
+          var bb = window._vizscatter2_bandsBtn;
+          if (bb && mx >= bb.x1 && mx <= bb.x2 && my >= bb.y1 && my <= bb.y2) {
+            showBands = !showBands;
+            return;
+          }
         });
       }
 
@@ -74,7 +88,7 @@
       }
 
       //------------------------------------------------------------------
-      //  PROMPT 1 — Extract numeric values AND fuel type
+      //  Extract numeric values AND fuel type
       //------------------------------------------------------------------
       var pts = [];
       for (var i = 0; i < data.length; i++) {
@@ -97,17 +111,14 @@
 
         pts.push({ co2: co2, powerKw: powerKw, fuel: fuel });
       }
-      //------------------------------------------------------------------
 
       //------------------------------------------------------------------
-      //  PROMPT 3 — FILTER LOGIC
+      //  FILTER LOGIC
       //------------------------------------------------------------------
       var mode = (manager.fuelFilter || "All");
 
       if (mode === "Petrol") pts = pts.filter(d => d.fuel === "Petrol");
       if (mode === "Diesel") pts = pts.filter(d => d.fuel === "Diesel");
-      // mode === "All" → do nothing
-      //------------------------------------------------------------------
 
       // If nothing survives the filter
       if (!pts.length) {
@@ -141,6 +152,80 @@
       var innerRight = left + w - 40;
       var innerTop = top + 60;
       var innerBottom = top + h - 50;
+
+      //------------------------------------------------------------------
+      // Draw power category bands if enabled
+      //------------------------------------------------------------------
+      if (showBands) {
+        p.noStroke();
+
+        // Economy: 0-80 kW (up to ~107 hp)
+        var x1 = p.map(0, minPower, maxPower, innerLeft, innerRight);
+        var x2 = p.map(80, minPower, maxPower, innerLeft, innerRight);
+        x1 = Math.max(x1, innerLeft);
+        x2 = Math.min(x2, innerRight);
+        if (x2 > x1) {
+          p.fill(100, 180, 255, 50); // light blue
+          p.rect(x1, innerTop, x2 - x1, innerBottom - innerTop);
+        }
+
+        // Standard: 80-150 kW (~107-201 hp)
+        x1 = p.map(80, minPower, maxPower, innerLeft, innerRight);
+        x2 = p.map(150, minPower, maxPower, innerLeft, innerRight);
+        x1 = Math.max(x1, innerLeft);
+        x2 = Math.min(x2, innerRight);
+        if (x2 > x1) {
+          p.fill(100, 200, 100, 50); // light green
+          p.rect(x1, innerTop, x2 - x1, innerBottom - innerTop);
+        }
+
+        // Performance/SUV: 150-300 kW (~201-402 hp)
+        x1 = p.map(150, minPower, maxPower, innerLeft, innerRight);
+        x2 = p.map(300, minPower, maxPower, innerLeft, innerRight);
+        x1 = Math.max(x1, innerLeft);
+        x2 = Math.min(x2, innerRight);
+        if (x2 > x1) {
+          p.fill(255, 220, 100, 50); // light yellow
+          p.rect(x1, innerTop, x2 - x1, innerBottom - innerTop);
+        }
+
+        // High-performance: 300+ kW (402+ hp)
+        x1 = p.map(300, minPower, maxPower, innerLeft, innerRight);
+        x2 = innerRight;
+        x1 = Math.max(x1, innerLeft);
+        if (x2 > x1) {
+          p.fill(255, 150, 150, 50); // light red/pink
+          p.rect(x1, innerTop, x2 - x1, innerBottom - innerTop);
+        }
+
+        // Labels at bottom of bands
+        p.textSize(11);
+        p.textAlign(p.CENTER, p.TOP);
+        p.fill(60);
+
+        var labelY = innerBottom - 20;
+
+        // Only draw label if band is visible
+        var econX = p.map(40, minPower, maxPower, innerLeft, innerRight);
+        if (econX > innerLeft && econX < innerRight) {
+          p.text("Economy", econX, labelY);
+        }
+
+        var stdX = p.map(115, minPower, maxPower, innerLeft, innerRight);
+        if (stdX > innerLeft && stdX < innerRight) {
+          p.text("Standard", stdX, labelY);
+        }
+
+        var suvX = p.map(225, minPower, maxPower, innerLeft, innerRight);
+        if (suvX > innerLeft && suvX < innerRight) {
+          p.text("SUV/Sport", suvX, labelY);
+        }
+
+        var luxX = p.map(450, minPower, maxPower, innerLeft, innerRight);
+        if (luxX > innerLeft && luxX < innerRight) {
+          p.text("Luxury", luxX, labelY);
+        }
+      }
 
       //------------------------------------------------------------------
       // Gridlines
@@ -224,23 +309,25 @@
       );
 
       //------------------------------------------------------------------
-      // PROMPT 4 — BUTTON DRAWING
+      // BUTTON DRAWING
       //------------------------------------------------------------------
       var subtitleBottomY = innerTop - 24 + 14;
       var btnY = subtitleBottomY + 6;
       var activeMode = manager.fuelFilter || "All";
 
-      var totalW = btns[0].w + btns[1].w + btns[2].w + 20 + 20;
+      var spacing = 20;
+      var totalW = btns[0].w + btns[1].w + btns[2].w + spacing * 2;
       var startX = left + (w - totalW) / 2;
+
       for (var bi = 0; bi < btns.length; bi++) {
         var b = btns[bi];
-        var bx = startX + bi * (b.w + 20);
+        var bx = startX + bi * (b.w + spacing);
         var by = btnY;
 
         b.x = bx;
         b.y = by;
 
-        // Store global coordinates (for consistency with viz_bar pattern)
+        // Store global coordinates
         window['_vizscatter2_btn' + bi] = {
           x1: bx,
           y1: by,
@@ -252,13 +339,10 @@
         var isActive = (activeMode === b.mode);
 
         if (b.mode === "All") {
-          // Blue for "All"
           p.fill(isActive ? p.color(40, 110, 220) : p.color(180, 200, 230));
         } else if (b.mode === "Petrol") {
-          // Orange for Petrol (matches dot color)
           p.fill(isActive ? p.color(255, 140, 0) : p.color(255, 210, 160));
         } else if (b.mode === "Diesel") {
-          // Green for Diesel (matches dot color)
           p.fill(isActive ? p.color(34, 139, 34) : p.color(160, 210, 160));
         }
 
@@ -271,6 +355,37 @@
         p.textSize(18);
         p.text(b.label, bx + b.w / 2, by + b.h / 2);
       }
+
+      //------------------------------------------------------------------
+      // Guide toggle button (to the right of fuel buttons)
+      //------------------------------------------------------------------
+      var bandsBtnX = startX + totalW + 30;
+      var bandsBtnY = btnY;
+
+      bandsBtn.x = bandsBtnX;
+      bandsBtn.y = bandsBtnY;
+
+      window._vizscatter2_bandsBtn = {
+        x1: bandsBtnX,
+        y1: bandsBtnY,
+        x2: bandsBtnX + bandsBtn.w,
+        y2: bandsBtnY + bandsBtn.h
+      };
+
+      // Draw button
+      if (showBands) {
+        p.fill(40, 110, 220);
+      } else {
+        p.fill(230);
+      }
+      p.stroke(0, 60);
+      p.rect(bandsBtnX, bandsBtnY, bandsBtn.w, bandsBtn.h, 4);
+
+      p.fill(showBands ? 255 : 60);
+      p.noStroke();
+      p.textAlign(p.CENTER, p.CENTER);
+      p.textSize(16);
+      p.text(bandsBtn.label, bandsBtnX + bandsBtn.w / 2, bandsBtnY + bandsBtn.h / 2);
 
       //------------------------------------------------------------------
       // Scatter points (colored by fuel type)
@@ -302,7 +417,6 @@
         p.circle(x, y, 3.5);
       }
 
-
       //------------------------------------------------------------------
       // Hover detection
       //------------------------------------------------------------------
@@ -322,7 +436,7 @@
       }
 
       //------------------------------------------------------------------
-      // Tooltip (fuel added next prompt)
+      // Tooltip
       //------------------------------------------------------------------
       if (hoverIndex !== -1) {
         var hpt = screenPts[hoverIndex];
@@ -357,8 +471,6 @@
         p.text(text2, bx + padding, by + 16);
       }
     }
-
-    // mousePressed function removed - now using direct canvas event listener
 
   };
 

@@ -1,5 +1,5 @@
 // viz_scatter.js
-// CO₂ vs Engine Size (cropped domain + better ticks + CAR TYPE ICONS)
+// CO₂ vs Engine Size (cropped domain + better ticks + CAR TYPE BANDS)
 (function () {
 
     // ---------------------------------------------------------
@@ -9,13 +9,19 @@
     var hoverIndex = -1;
 
     // ---------------------------------------------------------
-    // Fuel filter buttons (same as power scatter)
+    // Fuel filter buttons
     // ---------------------------------------------------------
     var btns = [
         { label: "All", mode: "All", x: 0, y: 0, w: 60, h: 24 },
         { label: "Petrol", mode: "Petrol", x: 0, y: 0, w: 70, h: 24 },
         { label: "Diesel", mode: "Diesel", x: 0, y: 0, w: 70, h: 24 }
     ];
+
+    // ---------------------------------------------------------
+    // Guide toggle (bands)
+    // ---------------------------------------------------------
+    var showBands = false;
+    var bandsBtn = { label: "Guide", x: 0, y: 0, w: 65, h: 24 };
 
     window.VizScatter = {
 
@@ -57,6 +63,13 @@
                             manager.fuelFilter = b.mode;
                             return;
                         }
+                    }
+
+                    // Check bands toggle button
+                    var bb = window._vizscatter_bandsBtn;
+                    if (bb && mx >= bb.x1 && mx <= bb.x2 && my >= bb.y1 && my <= bb.y2) {
+                        showBands = !showBands;
+                        return;
                     }
                 });
             }
@@ -153,6 +166,80 @@
             var innerRight = left + w - 20;
             var innerTop = top + 60;
             var innerBottom = top + h - 50;
+
+            // -------------------------------------------------------------
+            // Draw engine size category bands if enabled
+            // -------------------------------------------------------------
+            if (showBands) {
+                p.noStroke();
+
+                // Economy: 0.8-1.5L
+                var x1 = p.map(800, minPower, maxPower, innerLeft, innerRight);
+                var x2 = p.map(1500, minPower, maxPower, innerLeft, innerRight);
+                x1 = Math.max(x1, innerLeft);
+                x2 = Math.min(x2, innerRight);
+                if (x2 > x1) {
+                    p.fill(100, 180, 255, 50); // light blue
+                    p.rect(x1, innerTop, x2 - x1, innerBottom - innerTop);
+                }
+
+                // Standard: 1.5-2.5L
+                x1 = p.map(1500, minPower, maxPower, innerLeft, innerRight);
+                x2 = p.map(2500, minPower, maxPower, innerLeft, innerRight);
+                x1 = Math.max(x1, innerLeft);
+                x2 = Math.min(x2, innerRight);
+                if (x2 > x1) {
+                    p.fill(100, 200, 100, 50); // light green
+                    p.rect(x1, innerTop, x2 - x1, innerBottom - innerTop);
+                }
+
+                // Performance/SUV: 2.5-4.0L
+                x1 = p.map(2500, minPower, maxPower, innerLeft, innerRight);
+                x2 = p.map(4000, minPower, maxPower, innerLeft, innerRight);
+                x1 = Math.max(x1, innerLeft);
+                x2 = Math.min(x2, innerRight);
+                if (x2 > x1) {
+                    p.fill(255, 220, 100, 50); // light yellow
+                    p.rect(x1, innerTop, x2 - x1, innerBottom - innerTop);
+                }
+
+                // High-performance: 4.0L+
+                x1 = p.map(4000, minPower, maxPower, innerLeft, innerRight);
+                x2 = innerRight;
+                x1 = Math.max(x1, innerLeft);
+                if (x2 > x1) {
+                    p.fill(255, 150, 150, 50); // light red/pink
+                    p.rect(x1, innerTop, x2 - x1, innerBottom - innerTop);
+                }
+
+                // Labels at bottom of bands
+                p.textSize(11);
+                p.textAlign(p.CENTER, p.TOP);
+                p.fill(60);
+
+                var labelY = innerBottom - 20;
+
+                // Only draw label if band is visible
+                var econX = p.map(1150, minPower, maxPower, innerLeft, innerRight);
+                if (econX > innerLeft && econX < innerRight) {
+                    p.text("Economy", econX, labelY);
+                }
+
+                var stdX = p.map(2000, minPower, maxPower, innerLeft, innerRight);
+                if (stdX > innerLeft && stdX < innerRight) {
+                    p.text("Standard", stdX, labelY);
+                }
+
+                var suvX = p.map(3250, minPower, maxPower, innerLeft, innerRight);
+                if (suvX > innerLeft && suvX < innerRight) {
+                    p.text("SUV/Sport", suvX, labelY);
+                }
+
+                var luxX = p.map(5500, minPower, maxPower, innerLeft, innerRight);
+                if (luxX > innerLeft && luxX < innerRight) {
+                    p.text("Luxury", luxX, labelY);
+                }
+            }
 
             // -------------------------------------------------------------
             // Gridlines
@@ -253,12 +340,12 @@
             p.text('CO₂ Emissions vs Engine Size', left + w / 2, innerTop - 28);
 
             // -------------------------------------------------------------
-            // Fuel Filter Buttons (moved to top-right)
+            // Fuel Filter Buttons (centered)
             // -------------------------------------------------------------
-            var btnY = innerTop - 24 + 14 + 6;   // same vertical logic as scatter2
+            var btnY = innerTop - 24 + 14 + 6;
             var activeMode = mode;
 
-            // Compute total width of all 3 buttons + spacing
+            // Compute total width of all 3 buttons + spacing + guide button
             var spacing = 20;
             var totalW = btns[0].w + btns[1].w + btns[2].w + spacing * 2;
 
@@ -271,7 +358,7 @@
                 b.x = bx;
                 b.y = btnY;
 
-                // Store global coordinates (for consistency with viz_bar pattern)
+                // Store global coordinates
                 window['_vizscatter_btn' + bi] = {
                     x1: bx,
                     y1: btnY,
@@ -283,13 +370,10 @@
                 var isActive = (activeMode === b.mode);
 
                 if (b.mode === "All") {
-                    // Blue for "All"
                     p.fill(isActive ? p.color(40, 110, 220) : p.color(180, 200, 230));
                 } else if (b.mode === "Petrol") {
-                    // Orange for Petrol (matches dot color)
                     p.fill(isActive ? p.color(255, 140, 0) : p.color(255, 210, 160));
                 } else if (b.mode === "Diesel") {
-                    // Green for Diesel (matches dot color)
                     p.fill(isActive ? p.color(34, 139, 34) : p.color(160, 210, 160));
                 }
 
@@ -303,6 +387,36 @@
                 p.text(b.label, bx + b.w / 2, btnY + b.h / 2);
             }
 
+            // -------------------------------------------------------------
+            // Guide toggle button (to the right of fuel buttons)
+            // -------------------------------------------------------------
+            var bandsBtnX = startX + totalW + 30;
+            var bandsBtnY = btnY;
+
+            bandsBtn.x = bandsBtnX;
+            bandsBtn.y = bandsBtnY;
+
+            window._vizscatter_bandsBtn = {
+                x1: bandsBtnX,
+                y1: bandsBtnY,
+                x2: bandsBtnX + bandsBtn.w,
+                y2: bandsBtnY + bandsBtn.h
+            };
+
+            // Draw button
+            if (showBands) {
+                p.fill(40, 110, 220);
+            } else {
+                p.fill(230);
+            }
+            p.stroke(0, 60);
+            p.rect(bandsBtnX, bandsBtnY, bandsBtn.w, bandsBtn.h, 4);
+
+            p.fill(showBands ? 255 : 60);
+            p.noStroke();
+            p.textAlign(p.CENTER, p.CENTER);
+            p.textSize(16);
+            p.text(bandsBtn.label, bandsBtnX + bandsBtn.w / 2, bandsBtnY + bandsBtn.h / 2);
 
             // -------------------------------------------------------------
             // Draw points + record screen coords (colored by fuel)
@@ -333,7 +447,6 @@
 
                 p.circle(x, y, 4);
             }
-
 
             // -------------------------------------------------------------
             // Hover highlight
@@ -391,46 +504,6 @@
             }
 
             // -------------------------------------------------------------
-            // Car type icons
-            // -------------------------------------------------------------
-            p.stroke(180);
-            p.strokeWeight(1);
-            var iconBaselineY = innerBottom + 22;
-            p.line(innerLeft, iconBaselineY, innerRight, iconBaselineY);
-
-            var iconY = innerBottom + 18;
-            var iconSize = 20;
-            p.textSize(iconSize);
-            p.textAlign(p.CENTER, p.CENTER);
-
-            function drawEmoji(emoji, x, y) {
-                p.noStroke();
-                p.fill(255);
-                p.circle(x, y, iconSize * 1.4);
-
-                p.fill(0, 30);
-                p.text(emoji, x, y + 2);
-
-                p.fill(0);
-                p.text(emoji, x, y);
-            }
-
-            var xSmall = p.map(1400, minPower, maxPower, innerLeft, innerRight);
-            var xMedium = p.map(2300, minPower, maxPower, innerLeft, innerRight);
-            var xLarge = p.map(3500, minPower, maxPower, innerLeft, innerRight);
-
-            // -------------------------------------------------------------
-            // Legend
-            // -------------------------------------------------------------
-            p.textSize(13);
-            p.fill(60);
-            p.textAlign(p.LEFT, p.TOP);
-
-            var legendX = innerLeft + 6;
-            var legendY = innerTop + 4;
-            var legendSpacing = 16;
-
-            // -------------------------------------------------------------
             // Caption
             // -------------------------------------------------------------
             p.textSize(11);
@@ -439,8 +512,6 @@
             p.text("Data source: European Vehicle CO₂ Dataset (NEDC)",
                 left + w / 2, top + h + 5);
         }
-
-        // mousePressed function removed - now using direct canvas event listener
     };
 
 })();
