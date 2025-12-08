@@ -193,30 +193,30 @@
             // Title + subtitle
             p.fill(0);
             p.textAlign(p.LEFT, p.TOP);
-            p.textSize(14);
+            p.textSize(30);
             p.text("Find a Car That Fits Your Values", cardX + 12, cardY + 10);
 
-            p.textSize(11);
+            p.textSize(18);
             p.fill(90);
-            p.text("Filter by CO\u2082, power, and fuel type.", cardX + 12, cardY + 30);
+            p.text("Filter by CO\u2082, power, and fuel type.", cardX + 12, cardY + 38);
 
             // ---- Slider geometry -------------------------------------------
             var sliderX1 = cardX + 40;
             var sliderX2 = cardX + 280;
-            var co2Y    = cardY + 80;
-            var hpY     = cardY + 130;
+            var co2Y = cardY + 90;
+            var hpY = cardY + 145;
 
             co2Slider.bounds = { x1: sliderX1, x2: sliderX2, y: co2Y };
-            hpSlider.bounds  = { x1: sliderX1, x2: sliderX2, y: hpY };
+            hpSlider.bounds = { x1: sliderX1, x2: sliderX2, y: hpY };
 
             // Labels
             p.fill(0);
             p.textAlign(p.LEFT, p.TOP);
-            p.textSize(12);
+            p.textSize(16);
             p.text("Max CO\u2082 (g/km): " + co2Slider.value.toFixed(0),
-                   cardX + 40, cardY + 64);
+                cardX + 40, cardY + 70);
             p.text("Min horsepower: " + hpSlider.value.toFixed(0),
-                   cardX + 40, cardY + 114);
+                cardX + 40, cardY + 125);
 
             // ---- Draw sliders ----------------------------------------------
             function drawSlider(slider, y) {
@@ -239,19 +239,20 @@
             }
 
             drawSlider(co2Slider, co2Y);
-            drawSlider(hpSlider,  hpY);
+            drawSlider(hpSlider, hpY);
 
             // ---- Fuel buttons ----------------------------------------------
             p.fill(0);
             p.noStroke();
             p.textAlign(p.LEFT, p.TOP);
+            p.textSize(16);
             p.text("Fuel type:", cardX + 40, cardY + 165);
 
             fuelButtons = [];
             var btnX = cardX + 40;
-            var btnY = cardY + 185;
-            var btnW = 70;
-            var btnH = 22;
+            var btnY = cardY + 190;
+            var btnW = 80;
+            var btnH = 28;
             var gap = 10;
 
             for (var i = 0; i < fuelOptions.length; i++) {
@@ -275,33 +276,33 @@
                     p.fill(0);
                 }
                 p.textAlign(p.CENTER, p.CENTER);
-                p.textSize(11);
+                p.textSize(14);
                 p.text(fuelOptions[i], x1 + btnW / 2, y1 + btnH / 2);
             }
 
             // ---- Filter + show cars (bottom of card) -----------------------
-            var maxCo2     = co2Slider.value;
-            var minHp      = hpSlider.value;
+            var maxCo2 = co2Slider.value;
+            var minHp = hpSlider.value;
             var fuelChoice = fuelOptions[selectedFuelIndex];
 
             var filtered = [];
             for (var idx = 0; idx < data.length; idx++) {
                 var d = data[idx];
-                var co2   = getCo2(d);
-                var hp    = getHP(d);
-                var fuel  = mapFuelCategory(getFuelRaw(d));
+                var co2 = getCo2(d);
+                var hp = getHP(d);
+                var fuel = mapFuelCategory(getFuelRaw(d));
 
                 if (!isFinite(co2) || !isFinite(hp)) continue;
                 if (co2 > maxCo2) continue;
-                if (hp  < minHp) continue;
+                if (hp < minHp) continue;
                 if (fuelChoice !== "Any" && fuel !== fuelChoice) continue;
 
                 filtered.push({
-                    make:  getMake(d),
+                    make: getMake(d),
                     model: getModel(d),
-                    co2:   co2,
-                    hp:    hp,
-                    fuel:  fuel
+                    co2: co2,
+                    hp: hp,
+                    fuel: fuel
                 });
             }
 
@@ -317,12 +318,12 @@
             // ---- TABLE RENDERING ------------------------------------------
             if (!filtered.length) {
                 p.text("No cars match your filters.\nTry relaxing CO\u2082 or HP.",
-                       listX, listY);
+                    listX, listY);
             } else {
                 // show up to 10 rows
-                var maxShown = Math.min(10, filtered.length);
+                var maxShown = Math.min(7, filtered.length);
 
-                p.textSize(12);
+                p.textSize(14);
                 p.fill(0);
                 p.text(
                     "Top matching cars (lowest CO\u2082 first)\n" +
@@ -331,18 +332,18 @@
                 );
 
                 // Simple table layout
-                var tableX  = listX;
-                var tableY  = listY + 30;
-                var rowH    = 20;
-                var headerH = 22;
+                var tableX = listX;
+                var tableY = listY + 35;
+                var rowH = 26;
+                var headerH = 28;
 
                 // Column definitions – redistribute the price width to Make & Model.
                 var cols = [
-                    { label: "#",             width: 24 },
-                    { label: "Make & Model",  width: 260 },
+                    { label: "#", width: 24 },
+                    { label: "Make & Model", width: 260 },
                     { label: "CO\u2082 (g/km)", width: 70 },
-                    { label: "HP",            width: 45 },
-                    { label: "Fuel",          width: 55 }
+                    { label: "HP", width: 45 },
+                    { label: "Fuel", width: 55 }
                 ];
 
                 var totalW = 0;
@@ -357,7 +358,7 @@
                 var xCursor = tableX;
                 p.textAlign(p.LEFT, p.CENTER);
                 p.fill(0);
-                p.textSize(11);
+                p.textSize(13);
                 for (var c = 0; c < cols.length; c++) {
                     var col = cols[c];
                     p.text(col.label, xCursor + 4, tableY + headerH / 2);
