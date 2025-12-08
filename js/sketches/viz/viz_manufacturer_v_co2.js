@@ -15,7 +15,7 @@
         sortMode: "co2",
 
         // bar mode: "dual" (petrol + diesel) or "combined" (single blue bar)
-        barMode: "petrol+diesel",
+        barMode: "combined",
 
         cycleSort: function () {
             if (this.sortMode === "co2") this.sortMode = "count";

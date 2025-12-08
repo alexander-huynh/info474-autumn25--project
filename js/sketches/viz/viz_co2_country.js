@@ -2,6 +2,13 @@
 // Average CO₂ emissions by country (horizontal bar chart, combined vs dual fuel mode)
 (function () {
 
+    // Pagination state
+    var itemsPerPage = 10;
+    var pageIndex = 0;
+    var maxPageIndex = 0;
+    var leftArrowBounds = null;
+    var rightArrowBounds = null;
+
     window.VizCountry = {
 
         COUNTRY_NAMES: {
@@ -14,12 +21,13 @@
         },
 
         // sorting + mode toggles
-        sortMode: "co2",       // "co2" | "alpha"
-        mode: "dual",      // "combined" | "dual"
+        sortMode: "co2",       // "co2" | "name"
+        mode: "combined",      // "combined" | "dual"
 
         cycleSort: function () {
             this.sortMode = (this.sortMode === "co2" ? "name" : "co2");
             window._vizcountry_needsRecalc = true;
+            pageIndex = 0; // Reset to first page on sort change
         },
 
         toggleMode: function () {
@@ -38,10 +46,10 @@
             // REBUILD DATASET
             // --------------------------------------------------------
             if (window._vizcountry_needsRecalc) {
-                manager._countryBars = null;
+                manager._countryBarsAll = null;
             }
 
-            if (!manager._countryBars) {
+            if (!manager._countryBarsAll) {
                 window._vizcountry_needsRecalc = false;
 
                 const VALID_MS = new Set([
@@ -113,27 +121,46 @@
                 else
                     arr.sort((a, b) => a.name.localeCompare(b.name));
 
-                // Keep ONLY top 10 countries
-                arr = arr.slice(0, 10);
-
-                manager._countryBars = arr;
+                // Store ALL countries (not sliced)
+                manager._countryBarsAll = arr;
             }
 
-            var bars = manager._countryBars;
-            var maxVal = 0;
+            var allBars = manager._countryBarsAll || [];
 
-            // compute max value depending on mode
+            if (!allBars || allBars.length === 0) {
+                p.textAlign(p.CENTER, p.CENTER);
+                p.fill(0);
+                p.text("No country CO₂ data found.", left + availW / 2, top + availH / 2);
+                return;
+            }
+
+            // --------------------------------------------------------
+            // PAGINATION LOGIC
+            // --------------------------------------------------------
+            var totalCount = allBars.length;
+            maxPageIndex = Math.max(0, Math.floor((totalCount - 1) / itemsPerPage));
+            if (pageIndex > maxPageIndex) pageIndex = maxPageIndex;
+            if (pageIndex < 0) pageIndex = 0;
+
+            var startIdx = pageIndex * itemsPerPage;
+            var endIdx = Math.min(startIdx + itemsPerPage, totalCount);
+            var bars = allBars.slice(startIdx, endIdx);
+
+            // --------------------------------------------------------
+            // COMPUTE MAX VALUE (from ALL data for consistent scaling)
+            // --------------------------------------------------------
+            var maxVal = 0;
             if (this.mode === "combined") {
-                for (let b of bars)
+                for (let b of allBars)
                     if (b.combined > maxVal) maxVal = b.combined;
             } else {
-                for (let b of bars) {
+                for (let b of allBars) {
                     if (b.petrol && b.petrol > maxVal) maxVal = b.petrol;
                     if (b.diesel && b.diesel > maxVal) maxVal = b.diesel;
                 }
             }
 
-            var rowH = bars.length > 0 ? (availH / bars.length) : 20;
+            var rowH = (availH - 40) / itemsPerPage; // Reserve space for arrows
             var barMaxW = availW - 150;
             p.push();
 
@@ -196,6 +223,9 @@
                     var x = evt.clientX - rect.left;
                     var y = evt.clientY - rect.top;
 
+                    // Check if this viz is active (index 5)
+                    if (manager.state.activeIndex !== 5) return;
+
                     let s = window._vizcountry_sort_btn;
                     if (s && x>=s.x1 && x<=s.x2 && y>=s.y1 && y<=s.y2) {
                         window.VizCountry.cycleSort();
@@ -205,6 +235,22 @@
                     let m = window._vizcountry_mode_btn;
                     if (m && x>=m.x1 && x<=m.x2 && y>=m.y1 && y<=m.y2) {
                         window.VizCountry.toggleMode();
+                        return;
+                    }
+
+                    // Left arrow
+                    if (leftArrowBounds &&
+                        x >= leftArrowBounds.x1 && x <= leftArrowBounds.x2 &&
+                        y >= leftArrowBounds.y1 && y <= leftArrowBounds.y2) {
+                        if (pageIndex > 0) pageIndex--;
+                        return;
+                    }
+
+                    // Right arrow
+                    if (rightArrowBounds &&
+                        x >= rightArrowBounds.x1 && x <= rightArrowBounds.x2 &&
+                        y >= rightArrowBounds.y1 && y <= rightArrowBounds.y2) {
+                        if (pageIndex < maxPageIndex) pageIndex++;
                         return;
                     }
                 });
@@ -252,6 +298,7 @@
                     let w = (b.combined / maxVal) * barMaxW;
 
                     p.fill(80,150,200,220);
+                    p.noStroke();
                     p.rect(baseX, yCenter - rowH*0.25, w, rowH*0.5, 4);
 
                     p.fill(0);
@@ -271,24 +318,113 @@
                 if (b.petrol !== null) {
                     let wP = (b.petrol / maxVal) * barMaxW;
                     p.fill(240,140,40,220);
+                    p.noStroke();
                     p.rect(baseX, yP - barH/2, wP, barH, 3);
 
                     p.fill(0);
                     p.textAlign(p.LEFT, p.CENTER);
                     p.text(Math.round(b.petrol)+" g/km", baseX + wP + 6, yP);
+                } else {
+                    // No petrol data - show placeholder
+                    p.fill(180);
+                    p.textAlign(p.LEFT, p.CENTER);
+                    p.textSize(12);
+                    p.text("No petrol data", baseX, yP);
+                    p.textSize(16);
                 }
 
                 // Diesel bar
                 if (b.diesel !== null) {
                     let wD = (b.diesel / maxVal) * barMaxW;
                     p.fill(60,170,70,220);
+                    p.noStroke();
                     p.rect(baseX, yD - barH/2, wD, barH, 3);
 
                     p.fill(0);
                     p.textAlign(p.LEFT, p.CENTER);
                     p.text(Math.round(b.diesel)+" g/km", baseX + wD + 6, yD);
+                } else {
+                    // No diesel data - show placeholder
+                    p.fill(180);
+                    p.textAlign(p.LEFT, p.CENTER);
+                    p.textSize(12);
+                    p.text("No diesel data", baseX, yD);
+                    p.textSize(16);
                 }
             }
+
+            // --------------------------------------------------------
+            // PAGINATION ARROWS
+            // --------------------------------------------------------
+            var arrowY = plotTop + itemsPerPage * rowH + 10;
+            var arrowSize = 30;
+            var gapArrows = 8;
+            var controlsXRight = left + availW;
+
+            rightArrowBounds = {
+                x1: controlsXRight - arrowSize,
+                y1: arrowY - arrowSize / 2,
+                x2: controlsXRight,
+                y2: arrowY + arrowSize / 2
+            };
+
+            leftArrowBounds = {
+                x1: rightArrowBounds.x1 - gapArrows - arrowSize,
+                y1: rightArrowBounds.y1,
+                x2: rightArrowBounds.x1 - gapArrows,
+                y2: rightArrowBounds.y2
+            };
+
+            // Page info text
+            p.textAlign(p.RIGHT, p.CENTER);
+            p.textSize(15);
+            p.fill(0);
+            p.noStroke();
+            var pageInfo = (pageIndex + 1) + " / " + (maxPageIndex + 1);
+            p.text(pageInfo, leftArrowBounds.x1 - 12, arrowY);
+
+            // Draw left arrow box
+            p.rectMode(p.CORNER);
+            var hoverLeft = (mx >= leftArrowBounds.x1 && mx <= leftArrowBounds.x2 &&
+                             my >= leftArrowBounds.y1 && my <= leftArrowBounds.y2);
+            if (pageIndex === 0) {
+                p.fill(235);
+                p.stroke(210);
+            } else {
+                p.fill(hoverLeft ? 225 : 245);
+                p.stroke(200);
+            }
+            p.rect(leftArrowBounds.x1, leftArrowBounds.y1,
+                leftArrowBounds.x2 - leftArrowBounds.x1,
+                leftArrowBounds.y2 - leftArrowBounds.y1, 4);
+
+            // Draw right arrow box
+            var hoverRight = (mx >= rightArrowBounds.x1 && mx <= rightArrowBounds.x2 &&
+                              my >= rightArrowBounds.y1 && my <= rightArrowBounds.y2);
+            if (pageIndex === maxPageIndex) {
+                p.fill(235);
+                p.stroke(210);
+            } else {
+                p.fill(hoverRight ? 225 : 245);
+                p.stroke(200);
+            }
+            p.rect(rightArrowBounds.x1, rightArrowBounds.y1,
+                rightArrowBounds.x2 - rightArrowBounds.x1,
+                rightArrowBounds.y2 - rightArrowBounds.y1, 4);
+
+            // Arrow labels
+            p.noStroke();
+            p.fill(pageIndex === 0 ? 180 : 0);
+            p.textAlign(p.CENTER, p.CENTER);
+            p.textSize(16);
+            p.text("<",
+                (leftArrowBounds.x1 + leftArrowBounds.x2) / 2,
+                (leftArrowBounds.y1 + leftArrowBounds.y2) / 2);
+
+            p.fill(pageIndex === maxPageIndex ? 180 : 0);
+            p.text(">",
+                (rightArrowBounds.x1 + rightArrowBounds.x2) / 2,
+                (rightArrowBounds.y1 + rightArrowBounds.y2) / 2);
 
             p.pop();
         }
