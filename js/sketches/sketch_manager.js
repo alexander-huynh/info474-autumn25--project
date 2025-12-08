@@ -40,22 +40,20 @@ function startP5() {
                 self.draw(p);
             };
 
-            p.mousePressed = function () {
-                var ai = self.state.activeIndex || 0;
-
-                var viz = null;
-                if (ai === 1) viz = window.VizFuelTypes;
-                if (ai === 2) viz = window.VizScatter;
-                if (ai === 3) viz = window.VizScatter2;
-                if (ai === 4) viz = window.VizBar2;
-                if (ai === 5) viz = window.VizFilterPanel;
-                if (ai === 6) viz = window.VizSearchCar;
-                if (ai === 7) viz = window.VizCountry;
-
-                if (viz && typeof viz.mousePressed === "function") {
-                    viz.mousePressed(p, self);
-                }
-            };
+                p.mousePressed = function () {
+                    var ai = self.state.activeIndex || 0;
+                    var viz = null;
+                    if (ai === 1) viz = window.VizFuelTypes;
+                    if (ai === 2) viz = window.VizScatter;
+                    if (ai === 3) viz = window.VizScatter2;
+                    if (ai === 4) viz = window.VizBar2;
+                    if (ai === 5) viz = window.VizCountry;      // <-- FIXED
+                    if (ai === 6) viz = window.VizFilterPanel;  // <-- FIXED
+                    if (ai === 7) viz = window.VizSearchCar;    // <-- FIXED
+                    if (viz && typeof viz.mousePressed === "function") {
+                        viz.mousePressed(p, self);
+                    }
+                };
         };
 
         this.p5 = new p5(sketch);

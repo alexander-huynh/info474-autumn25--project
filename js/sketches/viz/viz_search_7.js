@@ -141,7 +141,7 @@
         eventsBound = true;
 
         p.keyTyped = function () {
-            if (currentAi !== 6 || !inputFocused) return;
+            if (currentAi !== 7 || !inputFocused) return;  // was: if (currentAi !== 6 || !inputFocused) return;
 
             if (p.key.length === 1 && searchQuery.length < 30) {
                 var ch = p.key;
@@ -158,7 +158,7 @@
         };
 
         p.keyPressed = function () {
-            if (currentAi !== 6 || !inputFocused) return;
+            if (currentAi !== 7 || !inputFocused) return;  // was: if (currentAi !== 6 || !inputFocused) return;
 
             if (p.keyCode === p.BACKSPACE) {
                 if (isPlaceholder || inputSelectAll) {
@@ -180,8 +180,7 @@
         };
 
         p.mousePressed = function () {
-            if (currentAi !== 6) return;
-
+            if (currentAi !== 7) return;  // was: if (currentAi !== 6) return;
             if (
                 inputBounds &&
                 p.mouseX >= inputBounds.x &&

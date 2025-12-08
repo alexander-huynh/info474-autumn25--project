@@ -100,7 +100,6 @@
         return "Unknown make";
     }
 
-    // Truncate long text with ellipsis so it doesn't bleed into next column
     function shorten(text, maxChars) {
         text = String(text);
         if (text.length <= maxChars) return text;
@@ -116,17 +115,20 @@
     }
 
     // -----------------------------------------------------------------------
-    // Events
+    // Events - using canvas event listeners (like VizScatter2)
     // -----------------------------------------------------------------------
-    function attachEventsOnce(p) {
+    function attachEventsOnce(p, manager) {
         if (eventsBound) return;
         eventsBound = true;
 
-        p.mousePressed = function () {
-            if (currentAi !== 5) return;
+        // MOUSEDOWN - handle clicks on sliders, buttons, arrows
+        p.canvas.addEventListener("mousedown", function (evt) {
+            if (manager.state.activeIndex !== 6) return;
 
-            var mx = p.mouseX;
-            var my = p.mouseY;
+            var rect = p.canvas.getBoundingClientRect();
+            var mx = evt.clientX - rect.left;
+            var my = evt.clientY - rect.top;
+
             activeSlider = null;
 
             // CO2 slider
@@ -136,6 +138,7 @@
                     updateSliderFromMouse(co2Slider, mx);
                     activeSlider = "co2";
                     pageIndex = 0;
+                    return;
                 }
             }
 
@@ -146,6 +149,7 @@
                     updateSliderFromMouse(hpSlider, mx);
                     activeSlider = "hp";
                     pageIndex = 0;
+                    return;
                 }
             }
 
@@ -155,7 +159,7 @@
                 if (mx >= fb.x1 && mx <= fb.x2 && my >= fb.y1 && my <= fb.y2) {
                     selectedFuelIndex = i;
                     pageIndex = 0;
-                    break;
+                    return;
                 }
             }
 
@@ -164,29 +168,40 @@
                 mx >= leftArrowBounds.x1 && mx <= leftArrowBounds.x2 &&
                 my >= leftArrowBounds.y1 && my <= leftArrowBounds.y2) {
                 if (pageIndex > 0) pageIndex--;
+                return;
             }
             if (rightArrowBounds &&
                 mx >= rightArrowBounds.x1 && mx <= rightArrowBounds.x2 &&
                 my >= rightArrowBounds.y1 && my <= rightArrowBounds.y2) {
                 if (pageIndex < maxPageIndex) pageIndex++;
+                return;
             }
-        };
+        });
 
-        p.mouseDragged = function () {
-            if (currentAi !== 5) return;
+        // MOUSEMOVE - handle slider dragging
+        p.canvas.addEventListener("mousemove", function (evt) {
+            if (manager.state.activeIndex !== 6) return;
             if (!activeSlider) return;
 
-            var mx = p.mouseX;
+            var rect = p.canvas.getBoundingClientRect();
+            var mx = evt.clientX - rect.left;
+
             if (activeSlider === "co2") {
                 updateSliderFromMouse(co2Slider, mx);
             } else if (activeSlider === "hp") {
                 updateSliderFromMouse(hpSlider, mx);
             }
-        };
+        });
 
-        p.mouseReleased = function () {
+        // MOUSEUP - release slider
+        p.canvas.addEventListener("mouseup", function (evt) {
             activeSlider = null;
-        };
+        });
+
+        // Also listen on window for mouseup (in case mouse leaves canvas)
+        window.addEventListener("mouseup", function (evt) {
+            activeSlider = null;
+        });
     }
 
     // -----------------------------------------------------------------------
@@ -196,7 +211,7 @@
         draw: function (p, manager, ai, progress) {
             var data = manager.data || [];
             currentAi = ai;
-            attachEventsOnce(p);
+            attachEventsOnce(p, manager);
 
             var left = manager.offsetX || 0;
             var top = manager.offsetY || 0;
@@ -219,7 +234,6 @@
             var cardW = w - 40;
             var cardH = h - 40;
 
-            // white card, NO border
             p.noStroke();
             p.fill(255);
             p.rectMode(p.CORNER);
