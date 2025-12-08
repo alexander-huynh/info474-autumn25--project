@@ -443,7 +443,7 @@
                 }
 
                 // Pagination arrows at bottom-right of card
-var controlsY = tableY + headerH + (shown * rowH) + 18;
+                var controlsY = tableY + headerH + (shown * rowH) + 18;
                 var controlsXRight = cardX + cardW - 20;
                 var arrowSize = 30;
                 var gapArrows = 8;
