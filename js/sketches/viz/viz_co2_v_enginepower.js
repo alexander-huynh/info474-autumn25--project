@@ -15,7 +15,7 @@
 
   // Button hitboxes (assigned coords during draw)
   var btns = [
-    { label: "All",    mode: "All",    x: 0, y: 0, w: 60, h: 24 },
+    { label: "All", mode: "All", x: 0, y: 0, w: 60, h: 24 },
     { label: "Petrol", mode: "Petrol", x: 0, y: 0, w: 70, h: 24 },
     { label: "Diesel", mode: "Diesel", x: 0, y: 0, w: 70, h: 24 }
   ];
@@ -28,9 +28,9 @@
     draw: function (p, manager, ai, progress) {
       var data = manager.data || [];
       var left = manager.offsetX || 0;
-      var top  = manager.offsetY || 0;
-      var w    = manager.width  || 600;
-      var h    = manager.height || 520;
+      var top = manager.offsetY || 0;
+      var w = manager.width || 600;
+      var h = manager.height || 520;
 
       screenPts = [];
       hoverIndex = -1;
@@ -45,7 +45,7 @@
           var rect = p.canvas.getBoundingClientRect();
           var mx = evt.clientX - rect.left;
           var my = evt.clientY - rect.top;
-          
+
           // Only process if this viz is active (index 3)
           if (manager.state.activeIndex !== 3) return;
 
@@ -104,8 +104,8 @@
       //------------------------------------------------------------------
       var mode = (manager.fuelFilter || "All");
 
-      if (mode === "Petrol")   pts = pts.filter(d => d.fuel === "Petrol");
-      if (mode === "Diesel")   pts = pts.filter(d => d.fuel === "Diesel");
+      if (mode === "Petrol") pts = pts.filter(d => d.fuel === "Petrol");
+      if (mode === "Diesel") pts = pts.filter(d => d.fuel === "Diesel");
       // mode === "All" → do nothing
       //------------------------------------------------------------------
 
@@ -119,27 +119,27 @@
       // Compute ranges
       //------------------------------------------------------------------
       var minPower = Infinity, maxPower = -Infinity;
-      var minCo2   = Infinity, maxCo2   = -Infinity;
+      var minCo2 = Infinity, maxCo2 = -Infinity;
 
       for (var j = 0; j < pts.length; j++) {
         var d = pts[j];
         if (d.powerKw < minPower) minPower = d.powerKw;
         if (d.powerKw > maxPower) maxPower = d.powerKw;
-        if (d.co2     < minCo2)   minCo2   = d.co2;
-        if (d.co2     > maxCo2)   maxCo2   = d.co2;
+        if (d.co2 < minCo2) minCo2 = d.co2;
+        if (d.co2 > maxCo2) maxCo2 = d.co2;
       }
 
       minPower = Math.max(minPower, 0);
       maxPower = Math.min(maxPower, 900);
-      minCo2   = Math.max(minCo2, 0);
-      maxCo2   = Math.min(maxCo2, 5050);
+      minCo2 = Math.max(minCo2, 0);
+      maxCo2 = Math.min(maxCo2, 5050);
 
       //------------------------------------------------------------------
       // Layout region
       //------------------------------------------------------------------
-      var innerLeft   = left + 60;
-      var innerRight  = left + w - 40;
-      var innerTop    = top + 60;
+      var innerLeft = left + 60;
+      var innerRight = left + w - 40;
+      var innerTop = top + 60;
       var innerBottom = top + h - 50;
 
       //------------------------------------------------------------------
@@ -232,7 +232,6 @@
 
       var totalW = btns[0].w + btns[1].w + btns[2].w + 20 + 20;
       var startX = left + (w - totalW) / 2;
-
       for (var bi = 0; bi < btns.length; bi++) {
         var b = btns[bi];
         var bx = startX + bi * (b.w + 20);
@@ -249,16 +248,25 @@
           y2: by + b.h
         };
 
-        if (activeMode === b.mode) {
-          p.fill(40, 110, 220);
-        } else {
-          p.fill(230);
+        // Color-coded backgrounds based on fuel type
+        var isActive = (activeMode === b.mode);
+
+        if (b.mode === "All") {
+          // Blue for "All"
+          p.fill(isActive ? p.color(40, 110, 220) : p.color(180, 200, 230));
+        } else if (b.mode === "Petrol") {
+          // Orange for Petrol (matches dot color)
+          p.fill(isActive ? p.color(255, 140, 0) : p.color(255, 210, 160));
+        } else if (b.mode === "Diesel") {
+          // Green for Diesel (matches dot color)
+          p.fill(isActive ? p.color(34, 139, 34) : p.color(160, 210, 160));
         }
 
         p.stroke(0, 60);
         p.rect(bx, by, b.w, b.h, 4);
 
-        p.fill(activeMode === b.mode ? 255 : 0);
+        // label - white when active, dark when inactive
+        p.fill(isActive ? 255 : 60);
         p.textAlign(p.CENTER, p.CENTER);
         p.textSize(18);
         p.text(b.label, bx + b.w / 2, by + b.h / 2);
@@ -324,7 +332,7 @@
         p.circle(hpt.x, hpt.y, 7.5);
 
         var text1 = "Power: " + hpt.powerKw.toFixed(0) + " kW";
-        var text2 = "CO₂: "   + hpt.co2.toFixed(0)      + " g/km";
+        var text2 = "CO₂: " + hpt.co2.toFixed(0) + " g/km";
 
         p.textSize(11);
         p.textAlign(p.LEFT, p.TOP);
@@ -336,8 +344,8 @@
         var bx = hpt.x + 14;
         var by = hpt.y - boxH - 10;
 
-        if (bx + boxW > left + w - 10)  bx = hpt.x - boxW - 14;
-        if (by < top + 10)              by = hpt.y + 14;
+        if (bx + boxW > left + w - 10) bx = hpt.x - boxW - 14;
+        if (by < top + 10) by = hpt.y + 14;
 
         p.fill(255, 255, 255, 240);
         p.stroke(0, 80);

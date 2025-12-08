@@ -264,35 +264,44 @@
 
             // Center horizontally
             var startX = left + (w - totalW) / 2;
+for (var bi = 0; bi < btns.length; bi++) {
+    var b = btns[bi];
+    var bx = startX + bi * (b.w + spacing);
 
-            for (var bi = 0; bi < btns.length; bi++) {
-                var b = btns[bi];
-                var bx = startX + bi * (b.w + spacing);
+    b.x = bx;
+    b.y = btnY;
 
-                b.x = bx;
-                b.y = btnY;
+    // Store global coordinates (for consistency with viz_bar pattern)
+    window['_vizscatter_btn' + bi] = {
+        x1: bx,
+        y1: btnY,
+        x2: bx + b.w,
+        y2: btnY + b.h
+    };
 
-                // Store global coordinates (for consistency with viz_bar pattern)
-                window['_vizscatter_btn' + bi] = {
-                    x1: bx,
-                    y1: btnY,
-                    x2: bx + b.w,
-                    y2: btnY + b.h
-                };
+    // Color-coded backgrounds based on fuel type
+    var isActive = (activeMode === b.mode);
+    
+    if (b.mode === "All") {
+        // Blue for "All"
+        p.fill(isActive ? p.color(40, 110, 220) : p.color(180, 200, 230));
+    } else if (b.mode === "Petrol") {
+        // Orange for Petrol (matches dot color)
+        p.fill(isActive ? p.color(255, 140, 0) : p.color(255, 210, 160));
+    } else if (b.mode === "Diesel") {
+        // Green for Diesel (matches dot color)
+        p.fill(isActive ? p.color(34, 139, 34) : p.color(160, 210, 160));
+    }
 
-                // background
-                if (activeMode === b.mode) p.fill(40, 110, 220);
-                else p.fill(230);
+    p.stroke(0, 60);
+    p.rect(bx, btnY, b.w, b.h, 4);
 
-                p.stroke(0, 60);
-                p.rect(bx, btnY, b.w, b.h, 4);
-
-                // label
-                p.fill(activeMode === b.mode ? 255 : 0);
-                p.textAlign(p.CENTER, p.CENTER);
-                p.textSize(14);
-                p.text(b.label, bx + b.w / 2, btnY + b.h / 2);
-            }
+    // label - white when active, dark when inactive
+    p.fill(isActive ? 255 : 60);
+    p.textAlign(p.CENTER, p.CENTER);
+    p.textSize(18);
+    p.text(b.label, bx + b.w / 2, btnY + b.h / 2);
+}
 
 
             // -------------------------------------------------------------
