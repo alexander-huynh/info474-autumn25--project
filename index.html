@@ -173,6 +173,8 @@
             The visuals bring these connections to life, helping readers recognize that everyday vehicles are part of a
             larger system defined by interconnected design decisions.
           </p>
+          <img src="img/aerial.jpg" alt="Illustration of cars with exhaust fumes" class="section-image" />
+
         </section>
         <div class="vis-slot"></div>
 
@@ -185,6 +187,8 @@
             foundation for understanding differences across thousands of cars. The goal is not to judge any specific
             model, but to illuminate the patterns that define how everyday vehicles contribute to environmental impact.
           </p>
+          <img src="img/eucars.jpg" alt="Illustration of cars with exhaust fumes" class="section-image" />
+
         </section>
         <div class="vis-slot"></div>
 
@@ -200,6 +204,7 @@
             Whether you're comparing cars, learning about climate impact, or simply curious, the goal is to help you
             make sense of the forces shaping the vehicles we drive every day.
           </p>
+          <img src="img/carbuying.jpeg" alt="Illustration of cars with exhaust fumes" class="section-image" />
         </section>
         <div class="vis-slot"></div>
 
@@ -241,11 +246,15 @@
         tag === 'TEXTAREA' ||
         e.target.isContentEditable;
 
-      if (!isTypingField && e.code === 'Space') {
+      // Allow space if search input is focused
+      const searchVizFocused = window.__searchInputFocused;
+
+      if (!isTypingField && !searchVizFocused && e.code === 'Space') {
         e.preventDefault();
       }
     });
   </script>
 
 </body>
+
 </html>

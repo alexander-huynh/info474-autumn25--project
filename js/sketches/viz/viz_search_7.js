@@ -158,11 +158,23 @@
         };
 
         p.keyPressed = function () {
-            if (currentAi !== 7 || !inputFocused) return;  // was: if (currentAi !== 6 || !inputFocused) return;
+            if (currentAi !== 7 || !inputFocused) return;
+
+            // Handle SPACE key here (before browser can scroll)
+            if (p.keyCode === 32) {  // 32 = space
+                if (searchQuery.length < 30) {
+                    if (isPlaceholder || inputSelectAll) {
+                        searchQuery = "";
+                        isPlaceholder = false;
+                        inputSelectAll = false;
+                    }
+                    searchQuery += " ";
+                }
+                return false;  // prevent default (scrolling)
+            }
 
             if (p.keyCode === p.BACKSPACE) {
                 if (isPlaceholder || inputSelectAll) {
-                    // delete everything (placeholder or selected text)
                     searchQuery = "";
                     isPlaceholder = false;
                     inputSelectAll = false;
@@ -180,7 +192,7 @@
         };
 
         p.mousePressed = function () {
-            if (currentAi !== 7) return;  // was: if (currentAi !== 6) return;
+            if (currentAi !== 7) return;
             if (
                 inputBounds &&
                 p.mouseX >= inputBounds.x &&
@@ -191,9 +203,11 @@
                 // click inside: focus and visually "select all"
                 inputFocused = true;
                 inputSelectAll = (searchQuery.length > 0);
+                window.__searchInputFocused = true;  // ADD THIS
             } else {
                 inputFocused = false;
                 inputSelectAll = false;
+                window.__searchInputFocused = false;  // ADD THIS
             }
         };
     }

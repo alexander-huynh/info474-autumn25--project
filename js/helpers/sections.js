@@ -45,12 +45,16 @@
 
                     var sc = new ScrollerCtor(cfg.containerSelector, cfg.stepSelector, cfg.trigger);
                     console.log("sections.js: scroller active, steps =", sc.steps.length);
-
-                    sc.on('active', function (index) {
-                        // Highlight text
-                        stepNodes.forEach((el, i) => {
-                            el.style.opacity = (i === index) ? '1' : '0.2';
-                        });
+sc.on('active', function (index) {
+    // Highlight text (skip dimming for image-only sections 8, 9, 10)
+    stepNodes.forEach((el, i) => {
+        var isImageOnlySection = (i === 8 || i === 9 || i === 10);
+        if (isImageOnlySection) {
+            el.style.opacity = '1';
+        } else {
+            el.style.opacity = (i === index) ? '1' : '0.2';
+        }
+    });
 
                         // Attach the viz canvas into this step’s slot
                         try {

@@ -87,3 +87,12 @@
 body {
   background-color: #ffffff !important;
 }
+
+/* Hide vis-slots for image-only sections */
+.step[data-active-index="8"] + .vis-slot,
+.step[data-active-index="9"] + .vis-slot,
+.step[data-active-index="10"] + .vis-slot {
+  display: none;
+  min-height: 0;
+  margin: 0;
+}
