@@ -18,7 +18,7 @@
         mode: "dual",      // "combined" | "dual"
 
         cycleSort: function () {
-            this.sortMode = (this.sortMode === "co2" ? "alpha" : "co2");
+            this.sortMode = (this.sortMode === "co2" ? "name" : "co2");
             window._vizcountry_needsRecalc = true;
         },
 
