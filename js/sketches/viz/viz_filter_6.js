@@ -25,7 +25,7 @@
     var fuelButtons = [];
 
     // Pagination
-    var itemsPerPage = 10;
+    var itemsPerPage = 5;
     var pageIndex = 0;
     var maxPageIndex = 0;
     var leftArrowBounds = null;
@@ -225,33 +225,33 @@
             p.rectMode(p.CORNER);
             p.rect(cardX, cardY, cardW, cardH, 6);
 
-            // Title + subtitle
-            p.fill(0);
-            p.textAlign(p.LEFT, p.TOP);
-            p.textSize(14);
-            p.text("Find a Car That Fits Your Values", cardX + 12, cardY + 10);
+// Title + subtitle
+p.fill(0);
+p.textAlign(p.LEFT, p.TOP);
+p.textSize(30);
+p.text("Find a Car That Fits Your Values", cardX + 12, cardY + 10);
 
-            p.textSize(11);
-            p.fill(90);
-            p.text("Filter by CO\u2082, power, and fuel type.", cardX + 12, cardY + 30);
+p.textSize(18);
+p.fill(90);
+p.text("Filter by CO\u2082, power, and fuel type.", cardX + 12, cardY + 38);
 
             // Slider geometry (same as original)
             var sliderX1 = cardX + 40;
             var sliderX2 = cardX + 280;
-            var co2Y    = cardY + 80;
-            var hpY     = cardY + 130;
+var co2Y    = cardY + 90;
+var hpY     = cardY + 145;
 
             co2Slider.bounds = { x1: sliderX1, x2: sliderX2, y: co2Y };
             hpSlider.bounds  = { x1: sliderX1, x2: sliderX2, y: hpY };
 
-            // Labels
-            p.fill(0);
-            p.textAlign(p.LEFT, p.TOP);
-            p.textSize(12);
-            p.text("Max CO\u2082 (g/km): " + co2Slider.value.toFixed(0),
-                   cardX + 40, cardY + 64);
-            p.text("Min horsepower: " + hpSlider.value.toFixed(0),
-                   cardX + 40, cardY + 114);
+// Labels
+p.fill(0);
+p.textAlign(p.LEFT, p.TOP);
+p.textSize(16);
+p.text("Max CO\u2082 (g/km): " + co2Slider.value.toFixed(0),
+       cardX + 40, cardY + 70);
+p.text("Min horsepower: " + hpSlider.value.toFixed(0),
+       cardX + 40, cardY + 125);
 
             // Sliders
             function drawSlider(slider, y) {
@@ -275,18 +275,17 @@
             drawSlider(hpSlider,  hpY);
 
             // Fuel buttons
-            p.fill(0);
-            p.noStroke();
-            p.textAlign(p.LEFT, p.TOP);
-            p.textSize(12);
-            p.text("Fuel type:", cardX + 40, cardY + 165);
+p.fill(0);
+p.noStroke();
+p.textAlign(p.LEFT, p.TOP);
+p.textSize(16);
+p.text("Fuel type:", cardX + 40, cardY + 175);
 
-            fuelButtons = [];
-            var btnX = cardX + 40;
-            var btnY = cardY + 185;
-            var btnW = 70;
-            var btnH = 22;
-            var gap = 10;
+fuelButtons = [];
+var btnX = cardX + 40;
+var btnY = cardY + 198;
+var btnW = 80;
+var btnH = 28;            var gap = 10;
 
             p.rectMode(p.CORNER); // make sure buttons use CORNER mode
 
@@ -311,8 +310,8 @@
                     p.fill(0);
                 }
                 p.textAlign(p.CENTER, p.CENTER);
-                p.textSize(11);
-                p.text(fuelOptions[i], x1 + btnW / 2, y1 + btnH / 2);
+p.textSize(14);
+p.text(fuelOptions[i], x1 + btnW / 2, y1 + btnH / 2);
             }
 
             // ----------------------------------------------------------------
@@ -345,12 +344,12 @@
 
             filtered.sort(function (a, b) { return a.co2 - b.co2; });
 
-            var listX = cardX + 40;
-            var listY = cardY + 225;
+var listX = cardX + 40;
+var listY = cardY + 245;
 
-            p.textAlign(p.LEFT, p.TOP);
-            p.textSize(12);
-            p.fill(0);
+p.textAlign(p.LEFT, p.TOP);
+p.textSize(14);
+p.fill(0);
 
             var totalCount = filtered.length;
             if (totalCount > 0) {
@@ -378,18 +377,18 @@
                 );
 
                 // Table
-                var tableX  = listX;
-                var tableY  = listY + 30;
-                var rowH    = 20;
-                var headerH = 22;
+var tableX  = listX;
+var tableY  = listY + 45;
+var rowH    = 32;
+var headerH = 34;
 
-                var cols = [
-                    { label: "#",             width: 24 },
-                    { label: "Make & Model",  width: 210 },
-                    { label: "CO\u2082 (g/km)", width: 70 },
-                    { label: "HP",            width: 45 },
-                    { label: "Fuel",          width: 55 }
-                ];
+var cols = [
+    { label: "#",             width: 30 },
+    { label: "Make & Model",  width: 280 },
+    { label: "CO\u2082 (g/km)", width: 85 },
+    { label: "HP",            width: 55 },
+    { label: "Fuel",          width: 65 }
+];
 
                 var totalW = 0;
                 for (var c = 0; c < cols.length; c++) totalW += cols[c].width;
@@ -403,7 +402,7 @@
                 var xCursor = tableX;
                 p.textAlign(p.LEFT, p.CENTER);
                 p.fill(0);
-                p.textSize(11);
+                p.textSize(15);
                 for (var c2 = 0; c2 < cols.length; c2++) {
                     var col = cols[c2];
                     p.text(col.label, xCursor + 4, tableY + headerH / 2);
@@ -427,7 +426,7 @@
                     xCursor = tableX;
 
                     var makeModel = car.make + " " + car.model;
-                    makeModel = shorten(makeModel, 30);
+makeModel = shorten(makeModel, 26);
 
                     var cells = [
                         String(k + 1),
@@ -445,9 +444,9 @@
                 }
 
                 // Pagination arrows at bottom-right of card
-                var controlsY = cardY + cardH - 24;
+                var controlsY = cardY + cardH + 20;
                 var controlsXRight = cardX + cardW - 20;
-                var arrowSize = 20;
+                var arrowSize = 26;
                 var gapArrows = 6;
 
                 rightArrowBounds = {
@@ -466,9 +465,9 @@
 
                 // Page info text
                 p.textAlign(p.RIGHT, p.CENTER);
-                p.textSize(11);
-                p.fill(0);
-                var pageInfo = "Page " + (pageIndex + 1) + " / " + (maxPageIndex + 1);
+p.textSize(14);
+p.fill(0);
+var pageInfo = "" + (pageIndex + 1) + " / " + (maxPageIndex + 1);
                 p.text(pageInfo, leftArrowBounds.x1 - 8, controlsY);
 
                 // Draw left arrow box
