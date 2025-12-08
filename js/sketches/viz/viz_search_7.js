@@ -245,9 +245,8 @@
             var cardW = w - 40;
             var cardH = h - 40;
 
-            // white card, light border
-            p.stroke(220);
-            p.strokeWeight(1);
+            // white card, NO border
+            p.noStroke();
             p.fill(255);
             p.rect(cardX, cardY, cardW, cardH, 6);
 
@@ -259,14 +258,20 @@
 
             p.textSize(11);
             p.fill(90);
-            p.text("Search your car model to compare its CO\u2082 and power to the dataset average.",
-                   cardX + 12, cardY + 30);
+            p.text(
+                "Search your car model to compare its CO\u2082 and power to the dataset average.",
+                cardX + 12,
+                cardY + 30
+            );
 
             // search label
             p.textSize(12);
             p.fill(0);
-            p.text("Search car model (type and press Enter):",
-                   cardX + 40, cardY + 60);
+            p.text(
+                "Search car model (type and press Enter):",
+                cardX + 40,
+                cardY + 60
+            );
 
             // faux input box
             var inputX = cardX + 40;
@@ -312,9 +317,10 @@
             if (!searchHasRun) {
                 p.text(
                     "Start typing the name of your car and press Enter.\n" +
-                    "We’ll look it up in the EU emissions dataset and show how it compares\n" +
-                    "to the average car in terms of CO\u2082 and horsepower.",
-                    infoX, infoY
+                        "We’ll look it up in the EU emissions dataset and show how it compares\n" +
+                        "to the average car in terms of CO\u2082 and horsepower.",
+                    infoX,
+                    infoY
                 );
                 return;
             }
@@ -322,8 +328,9 @@
             if (!lastResult) {
                 p.text(
                     "No matching cars found in the dataset.\n" +
-                    "Try a shorter or simpler search (for example just 'Golf' or 'Prius').",
-                    infoX, infoY
+                        "Try a shorter or simpler search (for example just 'Golf' or 'Prius').",
+                    infoX,
+                    infoY
                 );
                 return;
             }
@@ -333,7 +340,8 @@
 
             var lineY = infoY;
             p.textSize(13);
-            p.text("Closest match:", infoX, lineY); lineY += 20;
+            p.text("Closest match:", infoX, lineY);
+            lineY += 20;
 
             p.textSize(15);
             p.text(car.make + " " + car.model, infoX, lineY);
@@ -343,24 +351,30 @@
 
             var engText = isFinite(car.engine) ? car.engine.toFixed(0) + " cc" : "n/a";
             p.text(
-                "Fuel: " + car.fuel +
-                "    |    Engine: " + engText,
-                infoX, lineY
+                "Fuel: " + car.fuel + "    |    Engine: " + engText,
+                infoX,
+                lineY
             );
             lineY += 18;
 
             p.text(
-                "Your car – CO\u2082: " + car.co2.toFixed(0) + " g/km,  HP: " +
-                car.hp.toFixed(0),
-                infoX, lineY
+                "Your car – CO\u2082: " +
+                    car.co2.toFixed(0) +
+                    " g/km,  HP: " +
+                    car.hp.toFixed(0),
+                infoX,
+                lineY
             );
             lineY += 18;
 
             if (isFinite(avgCo2) && isFinite(avgHp)) {
                 p.text(
-                    "Dataset average – CO\u2082: " + avgCo2.toFixed(0) +
-                    " g/km,  HP: " + avgHp.toFixed(0),
-                    infoX, lineY
+                    "Dataset average – CO\u2082: " +
+                        avgCo2.toFixed(0) +
+                        " g/km,  HP: " +
+                        avgHp.toFixed(0),
+                    infoX,
+                    lineY
                 );
                 lineY += 20;
 
@@ -368,20 +382,28 @@
                 var dHp = car.hp - avgHp;
 
                 var co2Phrase =
-                    (Math.abs(dCo2) < 1) ? "about the same emissions as" :
-                    (dCo2 < 0 ? Math.abs(dCo2).toFixed(0) + " g/km lower CO\u2082 than" :
-                                dCo2.toFixed(0) + " g/km higher CO\u2082 than");
+                    Math.abs(dCo2) < 1
+                        ? "about the same emissions as"
+                        : dCo2 < 0
+                        ? Math.abs(dCo2).toFixed(0) + " g/km lower CO\u2082 than"
+                        : dCo2.toFixed(0) + " g/km higher CO\u2082 than";
 
                 var hpPhrase =
-                    (Math.abs(dHp) < 1) ? "about the same power as" :
-                    (dHp > 0 ? dHp.toFixed(0) + " more HP than" :
-                               Math.abs(dHp).toFixed(0) + " less HP than");
+                    Math.abs(dHp) < 1
+                        ? "about the same power as"
+                        : dHp > 0
+                        ? dHp.toFixed(0) + " more HP than"
+                        : Math.abs(dHp).toFixed(0) + " less HP than";
 
                 p.text(
-                    "Interpretation: your car has " + co2Phrase +
-                    " the average car,\n" +
-                    "and " + hpPhrase + " the average car in this dataset.",
-                    infoX, lineY
+                    "Interpretation: your car has " +
+                        co2Phrase +
+                        " the average car,\n" +
+                        "and " +
+                        hpPhrase +
+                        " the average car in this dataset.",
+                    infoX,
+                    lineY
                 );
             }
 

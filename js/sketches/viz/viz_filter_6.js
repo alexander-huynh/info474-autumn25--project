@@ -184,9 +184,8 @@
             var cardW = w - 40;
             var cardH = h - 40;
 
-            // white card, light border
-            p.stroke(220);
-            p.strokeWeight(1);
+            // white card, NO border
+            p.noStroke();
             p.fill(255);
             p.rect(cardX, cardY, cardW, cardH, 6);
 
@@ -336,7 +335,6 @@
                 var rowH    = 20;
                 var headerH = 22;
 
-                // Column definitions – redistribute the price width to Make & Model.
                 var cols = [
                     { label: "#",             width: 24 },
                     { label: "Make & Model",  width: 260 },
@@ -382,8 +380,7 @@
                     xCursor = tableX;
 
                     var makeModel = car.make + " " + car.model;
-                    // Truncate so it doesn't bleed into the next column
-                    makeModel = shorten(makeModel, 30); // slightly more room now
+                    makeModel = shorten(makeModel, 30);
 
                     var cells = [
                         String(k + 1),
@@ -403,3 +400,9 @@
         }
     };
 })();
+
+
+
+
+
+
