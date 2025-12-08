@@ -2,7 +2,7 @@
     var currentAi = -1;
 
     // typing state
-    var searchQuery = "";
+    var searchQuery = "e.g., Prius, Golf, 3 Series"; // start with placeholder as real text
     var searchHasRun = false;
     var lastResult = null;
 
@@ -12,6 +12,12 @@
     var avgHp = NaN;
 
     var eventsBound = false;
+
+    // input focus / selection state
+    var inputBounds = null;
+    var inputFocused = false;
+    var inputSelectAll = false;
+    var isPlaceholder = true; // track if the current text is just placeholder
 
     // ---------- helpers for reading data -----------------------------------
     function getNumericFromKeys(d, keys) {
@@ -94,7 +100,7 @@
         lastResult = null;
 
         var q = searchQuery.trim().toLowerCase();
-        if (!q) return;
+        if (!q || isPlaceholder) return;
 
         var candidates = [];
         for (var i = 0; i < data.length; i++) {
@@ -129,27 +135,38 @@
         lastResult = candidates[0];
     }
 
-    // ---------- keyboard events -------------------------------------------
+    // ---------- keyboard + mouse events -----------------------------------
     function attachEventsOnce(p, manager) {
         if (eventsBound) return;
         eventsBound = true;
 
         p.keyTyped = function () {
-            if (currentAi !== 6) return; // only when this viz is active
+            if (currentAi !== 6 || !inputFocused) return;
 
             if (p.key.length === 1 && searchQuery.length < 30) {
                 var ch = p.key;
                 if (ch >= " " && ch <= "~") {
+                    // if placeholder or "selected", clear first
+                    if (isPlaceholder || inputSelectAll) {
+                        searchQuery = "";
+                        isPlaceholder = false;
+                        inputSelectAll = false;
+                    }
                     searchQuery += ch;
                 }
             }
         };
 
         p.keyPressed = function () {
-            if (currentAi !== 6) return;
+            if (currentAi !== 6 || !inputFocused) return;
 
             if (p.keyCode === p.BACKSPACE) {
-                if (searchQuery.length > 0) {
+                if (isPlaceholder || inputSelectAll) {
+                    // delete everything (placeholder or selected text)
+                    searchQuery = "";
+                    isPlaceholder = false;
+                    inputSelectAll = false;
+                } else if (searchQuery.length > 0) {
                     searchQuery = searchQuery.slice(0, -1);
                 }
                 return;
@@ -157,7 +174,27 @@
 
             if (p.keyCode === p.ENTER || p.keyCode === p.RETURN) {
                 runSearch(manager.data || []);
+                inputSelectAll = false;
                 return false;
+            }
+        };
+
+        p.mousePressed = function () {
+            if (currentAi !== 6) return;
+
+            if (
+                inputBounds &&
+                p.mouseX >= inputBounds.x &&
+                p.mouseX <= inputBounds.x + inputBounds.w &&
+                p.mouseY >= inputBounds.y &&
+                p.mouseY <= inputBounds.y + inputBounds.h
+            ) {
+                // click inside: focus and visually "select all"
+                inputFocused = true;
+                inputSelectAll = (searchQuery.length > 0);
+            } else {
+                inputFocused = false;
+                inputSelectAll = false;
             }
         };
     }
@@ -237,20 +274,33 @@
             var inputW = cardW - 80;
             var inputH = 26;
 
-            p.stroke(searchQuery.length > 0 ? p.color(40, 120, 200) : p.color(210));
+            inputBounds = { x: inputX, y: inputY, w: inputW, h: inputH };
+
+            p.stroke(inputFocused ? p.color(40, 120, 200) : p.color(210));
             p.strokeWeight(1.5);
             p.fill(255);
             p.rect(inputX, inputY, inputW, inputH, 4);
 
             p.noStroke();
             p.textAlign(p.LEFT, p.CENTER);
+            p.textSize(12);
 
-            var displayText = searchQuery || "e.g., Prius, Golf, 3 Series";
-            var placeholder = searchQuery.length === 0;
-            if (placeholder) p.fill(140);
-            else p.fill(0);
+            // placeholder is just the initial text; draw it lighter when unfocused
+            if (isPlaceholder && !inputFocused) {
+                p.fill(140);
+            } else {
+                p.fill(0);
+            }
 
-            p.text(displayText, inputX + 8, inputY + inputH / 2);
+            // selection highlight when "select all" is active
+            if (inputFocused && inputSelectAll && searchQuery.length > 0) {
+                var tw = p.textWidth(searchQuery);
+                p.fill(200, 220, 255);
+                p.rect(inputX + 6, inputY + 4, tw + 4, inputH - 8, 2);
+                p.fill(0);
+            }
+
+            p.text(searchQuery, inputX + 8, inputY + inputH / 2);
 
             // ------------------ result / comparison area --------------------
             p.textAlign(p.LEFT, p.TOP);
@@ -281,8 +331,7 @@
             // we have a match
             var car = lastResult;
 
-            var lineY = infoX; // reuse variable name but as y-position
-            lineY = infoY;
+            var lineY = infoY;
             p.textSize(13);
             p.text("Closest match:", infoX, lineY); lineY += 20;
 
@@ -315,7 +364,6 @@
                 );
                 lineY += 20;
 
-                // quick verbal comparison
                 var dCo2 = car.co2 - avgCo2;
                 var dHp = car.hp - avgHp;
 
@@ -350,7 +398,6 @@
 
                 var maxScale = Math.max(avgCo2, car.co2) * 1.2;
 
-                // average bar – light grey
                 p.noStroke();
                 p.fill(220);
                 var avgLen = barW * (avgCo2 / maxScale);
@@ -358,14 +405,12 @@
                 p.fill(90);
                 p.text("Average", barX + avgLen + 6, barY - 2);
 
-                // your car bar – blue
                 p.fill(40, 120, 200);
                 var carLen = barW * (car.co2 / maxScale);
                 p.rect(barX, barY + 18, carLen, barH, 3);
                 p.fill(40, 80, 140);
                 p.text("Your car", barX + carLen + 6, barY + 16);
             }
-        
         }
     };
 })();
