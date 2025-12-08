@@ -437,7 +437,7 @@
             p.fill(120);
             p.textAlign(p.CENTER, p.TOP);
             p.text("Data source: European Vehicle CO₂ Dataset (NEDC)",
-                left + w / 2, top + h - 5);
+                left + w / 2, top + h + 5);
         }
 
         // mousePressed function removed - now using direct canvas event listener
