@@ -216,7 +216,7 @@
             p.textAlign(p.CENTER, p.TOP);
             p.textSize(22);
             p.fill(0);
-            p.text("Average CO₂ Emissions by Member State",
+            p.text("Average CO₂ Emissions by Country",
                    left + availW/2, top);
 
             p.textSize(14);
