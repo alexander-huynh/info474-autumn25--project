@@ -2,6 +2,13 @@
 // Average CO₂ emissions by manufacturer, dual-mode (combined OR petrol vs diesel)
 (function () {
 
+    // Pagination state
+    var itemsPerPage = 10;
+    var pageIndex = 0;
+    var maxPageIndex = 0;
+    var leftArrowBounds = null;
+    var rightArrowBounds = null;
+
     window.VizBar2 = {
 
         // sorting mode: "co2" | "count" | "name"
@@ -15,6 +22,7 @@
             else if (this.sortMode === "count") this.sortMode = "name";
             else this.sortMode = "co2";
             window._vizbar2_needsRecalc = true;
+            pageIndex = 0; // Reset to first page on sort change
         },
 
         toggleMode: function () {
@@ -53,6 +61,22 @@
                     var m = window._vizbar2_modeBtn;
                     if (m && mx >= m.x1 && mx <= m.x2 && my >= m.y1 && my <= m.y2) {
                         window.VizBar2.toggleMode();
+                        return;
+                    }
+
+                    // Left arrow
+                    if (leftArrowBounds &&
+                        mx >= leftArrowBounds.x1 && mx <= leftArrowBounds.x2 &&
+                        my >= leftArrowBounds.y1 && my <= leftArrowBounds.y2) {
+                        if (pageIndex > 0) pageIndex--;
+                        return;
+                    }
+
+                    // Right arrow
+                    if (rightArrowBounds &&
+                        mx >= rightArrowBounds.x1 && mx <= rightArrowBounds.x2 &&
+                        my >= rightArrowBounds.y1 && my <= rightArrowBounds.y2) {
+                        if (pageIndex < maxPageIndex) pageIndex++;
                         return;
                     }
                 });
@@ -117,21 +141,17 @@
                     });
                 }
 
-                // Top 10 by total cars
-                arr.sort((a, b) => b.total - a.total);
-                arr = arr.slice(0, 10);
-
-                // Sorting
+                // Sorting (on full dataset, not sliced)
                 if (this.sortMode === "co2") arr.sort((a, b) => b.combined - a.combined);
                 else if (this.sortMode === "count") arr.sort((a, b) => b.total - a.total);
                 else arr.sort((a, b) => a.name.localeCompare(b.name));
 
-                manager._manufacturerBars = arr;
+                manager._manufacturerBarsAll = arr; // Store full sorted array
             }
 
-            var bars = manager._manufacturerBars;
+            var allBars = manager._manufacturerBarsAll || [];
 
-            if (!bars || bars.length === 0) {
+            if (!allBars || allBars.length === 0) {
                 p.textAlign(p.CENTER, p.CENTER);
                 p.fill(0);
                 p.text("No manufacturer CO₂ data found.", left + availW / 2, top + availH / 2);
@@ -139,21 +159,33 @@
             }
 
             //------------------------------------------------------------------
-            // 2. SCALE MAX
+            // PAGINATION LOGIC
             //------------------------------------------------------------------
-            var maxVal = 0;
-            if (this.barMode === "combined") {
-                for (var i = 0; i < bars.length; i++) {
-                    if (bars[i].combined > maxVal) maxVal = bars[i].combined;
-                }
-            } else {
-                for (var i = 0; i < bars.length; i++) {
-                    if (bars[i].petrol && bars[i].petrol > maxVal) maxVal = bars[i].petrol;
-                    if (bars[i].diesel && bars[i].diesel > maxVal) maxVal = bars[i].diesel;
-                }
-            }
+            var totalCount = allBars.length;
+            maxPageIndex = Math.max(0, Math.floor((totalCount - 1) / itemsPerPage));
+            if (pageIndex > maxPageIndex) pageIndex = maxPageIndex;
+            if (pageIndex < 0) pageIndex = 0;
 
-            var rowH = availH / bars.length;
+            var startIdx = pageIndex * itemsPerPage;
+            var endIdx = Math.min(startIdx + itemsPerPage, totalCount);
+            var bars = allBars.slice(startIdx, endIdx);
+
+//------------------------------------------------------------------
+// 2. SCALE MAX (based on ALL data for consistent scaling across pages)
+//------------------------------------------------------------------
+var maxVal = 0;
+if (this.barMode === "combined") {
+    for (var i = 0; i < allBars.length; i++) {
+        if (allBars[i].combined > maxVal) maxVal = allBars[i].combined;
+    }
+} else {
+    for (var i = 0; i < allBars.length; i++) {
+        if (allBars[i].petrol && allBars[i].petrol > maxVal) maxVal = allBars[i].petrol;
+        if (allBars[i].diesel && allBars[i].diesel > maxVal) maxVal = allBars[i].diesel;
+    }
+}
+
+            var rowH = (availH - 40) / itemsPerPage; // Reserve space for arrows
             var barMaxW = availW - 150;
 
             p.push();
@@ -273,38 +305,127 @@
                     continue;
                 }
 
-                //--------------------------------------------------------------
-                // DUAL MODE (PETROL + DIESEL)
-                //--------------------------------------------------------------
-                var barH = rowH * 0.28;
+//--------------------------------------------------------------
+// DUAL MODE (PETROL + DIESEL)
+//--------------------------------------------------------------
+var barH = rowH * 0.28;
 
-                var yPetrol = yCenter - barH - 2;
-                var yDiesel = yCenter + 2;
+var yPetrol = yCenter - barH - 2;
+var yDiesel = yCenter + 2;
 
-                // Petrol bar
-                if (m.petrol !== null) {
-                    var wP = (m.petrol / maxVal) * barMaxW;
-                    p.fill(240, 140, 40, 220);
-                    p.rect(baseX, yPetrol - barH / 2, wP, barH, 3);
+// Petrol bar
+if (m.petrol !== null) {
+    var wP = (m.petrol / maxVal) * barMaxW;
+    p.fill(240, 140, 40, 220);
+    p.noStroke();
+    p.rect(baseX, yPetrol - barH / 2, wP, barH, 3);
 
-                    p.fill(0);
-                    p.textAlign(p.LEFT, p.CENTER);
-                    p.text(Math.round(m.petrol) + " g/km",
-                           baseX + wP + 6, yPetrol);
-                }
+    p.fill(0);
+    p.textAlign(p.LEFT, p.CENTER);
+    p.text(Math.round(m.petrol) + " g/km",
+           baseX + wP + 6, yPetrol);
+} else {
+    // No petrol data - show placeholder
+    p.fill(180);
+    p.textAlign(p.LEFT, p.CENTER);
+    p.textSize(12);
+    p.text("No petrol data", baseX, yPetrol);
+    p.textSize(16);
+}
 
-                // Diesel bar
-                if (m.diesel !== null) {
-                    var wD = (m.diesel / maxVal) * barMaxW;
-                    p.fill(60, 170, 70, 220);
-                    p.rect(baseX, yDiesel - barH / 2, wD, barH, 3);
+// Diesel bar
+if (m.diesel !== null) {
+    var wD = (m.diesel / maxVal) * barMaxW;
+    p.fill(60, 170, 70, 220);
+    p.noStroke();
+    p.rect(baseX, yDiesel - barH / 2, wD, barH, 3);
 
-                    p.fill(0);
-                    p.textAlign(p.LEFT, p.CENTER);
-                    p.text(Math.round(m.diesel) + " g/km",
-                           baseX + wD + 6, yDiesel);
-                }
+    p.fill(0);
+    p.textAlign(p.LEFT, p.CENTER);
+    p.text(Math.round(m.diesel) + " g/km",
+           baseX + wD + 6, yDiesel);
+} else {
+    // No diesel data - show placeholder
+    p.fill(180);
+    p.textAlign(p.LEFT, p.CENTER);
+    p.textSize(12);
+    p.text("No diesel data", baseX, yDiesel);
+    p.textSize(16);
+}
             }
+
+            //------------------------------------------------------------------
+            // PAGINATION ARROWS
+            //------------------------------------------------------------------
+            var arrowY = plotTop + itemsPerPage * rowH + 10;
+            var arrowSize = 30;
+            var gapArrows = 8;
+            var controlsXRight = left + availW;
+
+            rightArrowBounds = {
+                x1: controlsXRight - arrowSize,
+                y1: arrowY - arrowSize / 2,
+                x2: controlsXRight,
+                y2: arrowY + arrowSize / 2
+            };
+
+            leftArrowBounds = {
+                x1: rightArrowBounds.x1 - gapArrows - arrowSize,
+                y1: rightArrowBounds.y1,
+                x2: rightArrowBounds.x1 - gapArrows,
+                y2: rightArrowBounds.y2
+            };
+
+            // Page info text
+            p.textAlign(p.RIGHT, p.CENTER);
+            p.textSize(15);
+            p.fill(0);
+            p.noStroke();
+            var pageInfo = (pageIndex + 1) + " / " + (maxPageIndex + 1);
+            p.text(pageInfo, leftArrowBounds.x1 - 12, arrowY);
+
+            // Draw left arrow box
+            p.rectMode(p.CORNER);
+            var hoverLeft = (mx >= leftArrowBounds.x1 && mx <= leftArrowBounds.x2 &&
+                             my >= leftArrowBounds.y1 && my <= leftArrowBounds.y2);
+            if (pageIndex === 0) {
+                p.fill(235);
+                p.stroke(210);
+            } else {
+                p.fill(hoverLeft ? 225 : 245);
+                p.stroke(200);
+            }
+            p.rect(leftArrowBounds.x1, leftArrowBounds.y1,
+                leftArrowBounds.x2 - leftArrowBounds.x1,
+                leftArrowBounds.y2 - leftArrowBounds.y1, 4);
+
+            // Draw right arrow box
+            var hoverRight = (mx >= rightArrowBounds.x1 && mx <= rightArrowBounds.x2 &&
+                              my >= rightArrowBounds.y1 && my <= rightArrowBounds.y2);
+            if (pageIndex === maxPageIndex) {
+                p.fill(235);
+                p.stroke(210);
+            } else {
+                p.fill(hoverRight ? 225 : 245);
+                p.stroke(200);
+            }
+            p.rect(rightArrowBounds.x1, rightArrowBounds.y1,
+                rightArrowBounds.x2 - rightArrowBounds.x1,
+                rightArrowBounds.y2 - rightArrowBounds.y1, 4);
+
+            // Arrow labels
+            p.noStroke();
+            p.fill(pageIndex === 0 ? 180 : 0);
+            p.textAlign(p.CENTER, p.CENTER);
+            p.textSize(16);
+            p.text("<",
+                (leftArrowBounds.x1 + leftArrowBounds.x2) / 2,
+                (leftArrowBounds.y1 + leftArrowBounds.y2) / 2);
+
+            p.fill(pageIndex === maxPageIndex ? 180 : 0);
+            p.text(">",
+                (rightArrowBounds.x1 + rightArrowBounds.x2) / 2,
+                (rightArrowBounds.y1 + rightArrowBounds.y2) / 2);
 
             p.pop();
         }
