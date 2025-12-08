@@ -8,7 +8,7 @@
         sortMode: "co2",
 
         // bar mode: "dual" (petrol + diesel) or "combined" (single blue bar)
-        barMode: "dual",
+        barMode: "petrol+diesel",
 
         cycleSort: function () {
             if (this.sortMode === "co2") this.sortMode = "count";
@@ -18,7 +18,7 @@
         },
 
         toggleMode: function () {
-            this.barMode = (this.barMode === "dual" ? "combined" : "dual");
+            this.barMode = (this.barMode === "petrol+diesel" ? "combined" : "petrol+diesel");
         },
 
         draw: function (p, manager, ai, progress) {

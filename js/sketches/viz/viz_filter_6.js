@@ -302,31 +302,39 @@
             var gap = 12;
 
             p.rectMode(p.CORNER);
+for (var i = 0; i < fuelOptions.length; i++) {
+    var x1 = btnX + i * (btnW + gap);
+    var y1 = btnY;
+    var x2 = x1 + btnW;
+    var y2 = y1 + btnH;
 
-            for (var i = 0; i < fuelOptions.length; i++) {
-                var x1 = btnX + i * (btnW + gap);
-                var y1 = btnY;
-                var x2 = x1 + btnW;
-                var y2 = y1 + btnH;
+    fuelButtons.push({ x1: x1, y1: y1, x2: x2, y2: y2, label: fuelOptions[i] });
 
-                fuelButtons.push({ x1: x1, y1: y1, x2: x2, y2: y2, label: fuelOptions[i] });
+    var isActive = (i === selectedFuelIndex);
+    var label = fuelOptions[i];
 
-                if (i === selectedFuelIndex) {
-                    p.fill(40, 120, 200);
-                    p.noStroke();
-                    p.rect(x1, y1, btnW, btnH, 4);
-                    p.fill(255);
-                } else {
-                    p.fill(245);
-                    p.stroke(220);
-                    p.rect(x1, y1, btnW, btnH, 4);
-                    p.noStroke();
-                    p.fill(0);
-                }
-                p.textAlign(p.CENTER, p.CENTER);
-                p.textSize(16);
-                p.text(fuelOptions[i], x1 + btnW / 2, y1 + btnH / 2);
-            }
+    // Color-coded backgrounds based on fuel type
+    if (label === "Any") {
+        // Blue for "Any"
+        p.fill(isActive ? p.color(40, 120, 200) : p.color(180, 200, 230));
+    } else if (label === "Petrol") {
+        // Orange for Petrol
+        p.fill(isActive ? p.color(255, 140, 0) : p.color(255, 210, 160));
+    } else if (label === "Diesel") {
+        // Green for Diesel
+        p.fill(isActive ? p.color(34, 139, 34) : p.color(160, 210, 160));
+    }
+
+    p.stroke(isActive ? 0 : 220, isActive ? 60 : 255);
+    p.rect(x1, y1, btnW, btnH, 4);
+
+    // Label - white when active, dark when inactive
+    p.noStroke();
+    p.fill(isActive ? 255 : 60);
+    p.textAlign(p.CENTER, p.CENTER);
+    p.textSize(16);
+    p.text(label, x1 + btnW / 2, y1 + btnH / 2);
+}
 
             // ----------------------------------------------------------------
             // Filter + table

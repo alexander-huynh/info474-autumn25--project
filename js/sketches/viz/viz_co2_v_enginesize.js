@@ -5,14 +5,14 @@
     // ---------------------------------------------------------
     // Hover storage
     // ---------------------------------------------------------
-    var screenPts   = [];
-    var hoverIndex  = -1;
+    var screenPts = [];
+    var hoverIndex = -1;
 
     // ---------------------------------------------------------
     // Fuel filter buttons (same as power scatter)
     // ---------------------------------------------------------
     var btns = [
-        { label: "All",    mode: "All",    x: 0, y: 0, w: 60, h: 24 },
+        { label: "All", mode: "All", x: 0, y: 0, w: 60, h: 24 },
         { label: "Petrol", mode: "Petrol", x: 0, y: 0, w: 70, h: 24 },
         { label: "Diesel", mode: "Diesel", x: 0, y: 0, w: 70, h: 24 }
     ];
@@ -30,7 +30,7 @@
             var w = manager.width || 600;
             var h = manager.height || 520;
 
-            screenPts  = [];
+            screenPts = [];
             hoverIndex = -1;
 
             //------------------------------------------------------------------
@@ -43,7 +43,7 @@
                     var rect = p.canvas.getBoundingClientRect();
                     var mx = evt.clientX - rect.left;
                     var my = evt.clientY - rect.top;
-                    
+
                     // Only process if this viz is active (index 2)
                     if (manager.state.activeIndex !== 2) return;
 
@@ -78,8 +78,8 @@
             for (var i = 0; i < data.length; i++) {
                 var row = data[i];
 
-                var co2  = parseFloat(row.co2);
-                var eng  = parseFloat(row.power);
+                var co2 = parseFloat(row.co2);
+                var eng = parseFloat(row.power);
                 if (isNaN(co2) || isNaN(eng)) continue;
 
                 var rawFuel = (
@@ -92,7 +92,7 @@
 
                 var fuel = "Diesel";
                 if (rawFuel.includes("petrol") || rawFuel.includes("gasoline")) fuel = "Petrol";
-                if (rawFuel.includes("diesel"))                               fuel = "Diesel";
+                if (rawFuel.includes("diesel")) fuel = "Diesel";
 
                 pts.push({ co2: co2, power: eng, fuel: fuel });
             }
@@ -115,15 +115,15 @@
             // -------------------------------------------------------------
             // Min/max
             // -------------------------------------------------------------
-            var minCo2   = Infinity, maxCo2   = -Infinity;
+            var minCo2 = Infinity, maxCo2 = -Infinity;
             var minPower = Infinity, maxPower = -Infinity;
 
             for (var i = 0; i < pts.length; i++) {
                 var d = pts[i];
                 if (d.power < minPower) minPower = d.power;
                 if (d.power > maxPower) maxPower = d.power;
-                if (d.co2   < minCo2)   minCo2   = d.co2;
-                if (d.co2   > maxCo2)   maxCo2   = d.co2;
+                if (d.co2 < minCo2) minCo2 = d.co2;
+                if (d.co2 > maxCo2) maxCo2 = d.co2;
             }
 
             // Guard against weird data
@@ -149,9 +149,9 @@
             }
 
             // Layout
-            var innerLeft   = left + 60;
-            var innerRight  = left + w - 20;
-            var innerTop    = top + 60;
+            var innerLeft = left + 60;
+            var innerRight = left + w - 20;
+            var innerTop = top + 60;
             var innerBottom = top + h - 50;
 
             // -------------------------------------------------------------
@@ -164,7 +164,7 @@
             var minLit = minPower / 1000;
             var maxLit = maxPower / 1000;
             var startL = Math.max(1, Math.ceil(minLit));   // don't show 0L engines
-            var endL   = Math.floor(maxLit);
+            var endL = Math.floor(maxLit);
 
             for (var L = startL; L <= endL; L++) {
                 xLiters.push(L);
@@ -264,44 +264,44 @@
 
             // Center horizontally
             var startX = left + (w - totalW) / 2;
-for (var bi = 0; bi < btns.length; bi++) {
-    var b = btns[bi];
-    var bx = startX + bi * (b.w + spacing);
+            for (var bi = 0; bi < btns.length; bi++) {
+                var b = btns[bi];
+                var bx = startX + bi * (b.w + spacing);
 
-    b.x = bx;
-    b.y = btnY;
+                b.x = bx;
+                b.y = btnY;
 
-    // Store global coordinates (for consistency with viz_bar pattern)
-    window['_vizscatter_btn' + bi] = {
-        x1: bx,
-        y1: btnY,
-        x2: bx + b.w,
-        y2: btnY + b.h
-    };
+                // Store global coordinates (for consistency with viz_bar pattern)
+                window['_vizscatter_btn' + bi] = {
+                    x1: bx,
+                    y1: btnY,
+                    x2: bx + b.w,
+                    y2: btnY + b.h
+                };
 
-    // Color-coded backgrounds based on fuel type
-    var isActive = (activeMode === b.mode);
-    
-    if (b.mode === "All") {
-        // Blue for "All"
-        p.fill(isActive ? p.color(40, 110, 220) : p.color(180, 200, 230));
-    } else if (b.mode === "Petrol") {
-        // Orange for Petrol (matches dot color)
-        p.fill(isActive ? p.color(255, 140, 0) : p.color(255, 210, 160));
-    } else if (b.mode === "Diesel") {
-        // Green for Diesel (matches dot color)
-        p.fill(isActive ? p.color(34, 139, 34) : p.color(160, 210, 160));
-    }
+                // Color-coded backgrounds based on fuel type
+                var isActive = (activeMode === b.mode);
 
-    p.stroke(0, 60);
-    p.rect(bx, btnY, b.w, b.h, 4);
+                if (b.mode === "All") {
+                    // Blue for "All"
+                    p.fill(isActive ? p.color(40, 110, 220) : p.color(180, 200, 230));
+                } else if (b.mode === "Petrol") {
+                    // Orange for Petrol (matches dot color)
+                    p.fill(isActive ? p.color(255, 140, 0) : p.color(255, 210, 160));
+                } else if (b.mode === "Diesel") {
+                    // Green for Diesel (matches dot color)
+                    p.fill(isActive ? p.color(34, 139, 34) : p.color(160, 210, 160));
+                }
 
-    // label - white when active, dark when inactive
-    p.fill(isActive ? 255 : 60);
-    p.textAlign(p.CENTER, p.CENTER);
-    p.textSize(18);
-    p.text(b.label, bx + b.w / 2, btnY + b.h / 2);
-}
+                p.stroke(0, 60);
+                p.rect(bx, btnY, b.w, b.h, 4);
+
+                // label - white when active, dark when inactive
+                p.fill(isActive ? 255 : 60);
+                p.textAlign(p.CENTER, p.CENTER);
+                p.textSize(18);
+                p.text(b.label, bx + b.w / 2, btnY + b.h / 2);
+            }
 
 
             // -------------------------------------------------------------
@@ -373,8 +373,8 @@ for (var bi = 0; bi < btns.length; bi++) {
                 var bx = mx + 12;
                 var by = my - boxH - 8;
 
-                if (bx + boxW > left + w)  bx = left + w - boxW - 5;
-                if (by < top)              by = my + 12;
+                if (bx + boxW > left + w) bx = left + w - boxW - 5;
+                if (by < top) by = my + 12;
 
                 p.noStroke();
                 p.fill(0, 60);
@@ -387,7 +387,7 @@ for (var bi = 0; bi < btns.length; bi++) {
                 p.textSize(11);
                 p.textAlign(p.LEFT, p.TOP);
                 p.text("Engine: " + tt.liters.toFixed(1) + "L", bx + pad, by + 6);
-                p.text("CO₂: " + tt.co2 + " g/km",          bx + pad, by + 20);
+                p.text("CO₂: " + tt.co2 + " g/km", bx + pad, by + 20);
             }
 
             // -------------------------------------------------------------
@@ -415,9 +415,9 @@ for (var bi = 0; bi < btns.length; bi++) {
                 p.text(emoji, x, y);
             }
 
-            var xSmall  = p.map(1400, minPower, maxPower, innerLeft, innerRight);
+            var xSmall = p.map(1400, minPower, maxPower, innerLeft, innerRight);
             var xMedium = p.map(2300, minPower, maxPower, innerLeft, innerRight);
-            var xLarge  = p.map(3500, minPower, maxPower, innerLeft, innerRight);
+            var xLarge = p.map(3500, minPower, maxPower, innerLeft, innerRight);
 
             // -------------------------------------------------------------
             // Legend
@@ -437,7 +437,7 @@ for (var bi = 0; bi < btns.length; bi++) {
             p.fill(120);
             p.textAlign(p.CENTER, p.TOP);
             p.text("Data source: European Vehicle CO₂ Dataset (NEDC)",
-                   left + w / 2, top + h - 5);
+                left + w / 2, top + h - 5);
         }
 
         // mousePressed function removed - now using direct canvas event listener
