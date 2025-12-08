@@ -43,15 +43,14 @@
             }
             // --------------------------------------------------------------
 
-            if (ai === 0) return;
-
-            if (ai === 1) return window.VizFuelTypes.draw(p, manager, ai, progress);
-            if (ai === 2) return window.VizScatter.draw(p, manager, ai, progress);
-            if (ai === 3) return window.VizScatter2.draw(p, manager, ai, progress);
-            if (ai === 4) return window.VizBar2.draw(p, manager, ai, progress);
-            if (ai === 5) return window.VizFilterPanel.draw(p, manager, ai, progress);
-            if (ai === 6) return window.VizSearchCar.draw(p, manager, ai, progress);
-            if (ai === 7) return window.VizCountry.draw(p, manager, ai, progress);
+if (ai === 0) return;
+if (ai === 1) return window.VizFuelTypes.draw(p, manager, ai, progress);
+if (ai === 2) return window.VizScatter.draw(p, manager, ai, progress);
+if (ai === 3) return window.VizScatter2.draw(p, manager, ai, progress);
+if (ai === 4) return window.VizBar2.draw(p, manager, ai, progress);
+if (ai === 5) return window.VizCountry.draw(p, manager, ai, progress);
+if (ai === 6) return window.VizFilterPanel.draw(p, manager, ai, progress);
+if (ai === 7) return window.VizSearchCar.draw(p, manager, ai, progress);
         }
     };
 })();
