@@ -16,7 +16,26 @@
         bounds: null
     };
 
-    // We keep getPrice for display only, but no price slider/filter now
+    // Drag state
+    var activeSlider = null; // "co2", "hp", or null
+
+    // Fuel filter buttons
+    var fuelOptions = ["Any", "Petrol", "Diesel"];
+    var selectedFuelIndex = 0;
+    var fuelButtons = [];
+
+    // Pagination
+    var itemsPerPage = 10;
+    var pageIndex = 0;
+    var maxPageIndex = 0;
+    var leftArrowBounds = null;
+    var rightArrowBounds = null;
+
+    var eventsBound = false;
+
+    // -----------------------------------------------------------------------
+    // Helpers
+    // -----------------------------------------------------------------------
     function getNumericFromKeys(d, keys) {
         for (var i = 0; i < keys.length; i++) {
             var k = keys[i];
@@ -47,26 +66,6 @@
         ]);
     }
 
-    // Synthetic price if no real price column exists (for display only)
-    function getPrice(d) {
-        var direct = getNumericFromKeys(d, [
-            "price",
-            "price_eur",
-            "priceEuro",
-            "price_euro"
-        ]);
-        if (isFinite(direct)) return direct;
-
-        var hp = getHP(d);
-        var co2 = getCo2(d);
-        if (!isFinite(hp) && !isFinite(co2)) return NaN;
-
-        var base = 15000;
-        var hpComponent = isFinite(hp) ? hp * 80 : 0;
-        var co2Component = isFinite(co2) ? co2 * 20 : 0;
-        return base + hpComponent + co2Component;
-    }
-
     function getFuelRaw(d) {
         var keys = ["fuel", "fuel_type", "fuelType", "fuel_mode"];
         for (var i = 0; i < keys.length; i++) {
@@ -78,7 +77,7 @@
 
     function mapFuelCategory(raw) {
         var f = raw.toUpperCase();
-        if (f.indexOf("PETROL") !== -1) return "Petrol";
+        if (f.indexOf("PETROL") !== -1 || f.indexOf("GASOLINE") !== -1) return "Petrol";
         if (f.indexOf("DIESEL") !== -1) return "Diesel";
         return "Other";
     }
@@ -108,12 +107,16 @@
         return text.substring(0, maxChars - 1) + "…";
     }
 
-    var fuelOptions = ["Any", "Petrol", "Diesel"];
-    var selectedFuelIndex = 0;
-    var fuelButtons = [];
+    function updateSliderFromMouse(slider, mx) {
+        if (!slider.bounds) return;
+        var b = slider.bounds;
+        var t = (mx - b.x1) / (b.x2 - b.x1);
+        t = Math.max(0, Math.min(1, t));
+        slider.value = slider.min + t * (slider.max - slider.min);
+    }
 
-    var eventsBound = false;
-
+    // -----------------------------------------------------------------------
+    // Events
     // -----------------------------------------------------------------------
     function attachEventsOnce(p) {
         if (eventsBound) return;
@@ -124,14 +127,15 @@
 
             var mx = p.mouseX;
             var my = p.mouseY;
+            activeSlider = null;
 
-            // CO₂ slider
+            // CO2 slider
             if (co2Slider.bounds) {
                 var b = co2Slider.bounds;
                 if (my >= b.y - 8 && my <= b.y + 8 && mx >= b.x1 && mx <= b.x2) {
-                    var t = (mx - b.x1) / (b.x2 - b.x1);
-                    t = Math.max(0, Math.min(1, t));
-                    co2Slider.value = co2Slider.min + t * (co2Slider.max - co2Slider.min);
+                    updateSliderFromMouse(co2Slider, mx);
+                    activeSlider = "co2";
+                    pageIndex = 0;
                 }
             }
 
@@ -139,9 +143,9 @@
             if (hpSlider.bounds) {
                 var hb = hpSlider.bounds;
                 if (my >= hb.y - 8 && my <= hb.y + 8 && mx >= hb.x1 && mx <= hb.x2) {
-                    var th = (mx - hb.x1) / (hb.x2 - hb.x1);
-                    th = Math.max(0, Math.min(1, th));
-                    hpSlider.value = hpSlider.min + th * (hpSlider.max - hpSlider.min);
+                    updateSliderFromMouse(hpSlider, mx);
+                    activeSlider = "hp";
+                    pageIndex = 0;
                 }
             }
 
@@ -150,12 +154,43 @@
                 var fb = fuelButtons[i];
                 if (mx >= fb.x1 && mx <= fb.x2 && my >= fb.y1 && my <= fb.y2) {
                     selectedFuelIndex = i;
+                    pageIndex = 0;
                     break;
                 }
             }
+
+            // Pagination arrows
+            if (leftArrowBounds &&
+                mx >= leftArrowBounds.x1 && mx <= leftArrowBounds.x2 &&
+                my >= leftArrowBounds.y1 && my <= leftArrowBounds.y2) {
+                if (pageIndex > 0) pageIndex--;
+            }
+            if (rightArrowBounds &&
+                mx >= rightArrowBounds.x1 && mx <= rightArrowBounds.x2 &&
+                my >= rightArrowBounds.y1 && my <= rightArrowBounds.y2) {
+                if (pageIndex < maxPageIndex) pageIndex++;
+            }
+        };
+
+        p.mouseDragged = function () {
+            if (currentAi !== 5) return;
+            if (!activeSlider) return;
+
+            var mx = p.mouseX;
+            if (activeSlider === "co2") {
+                updateSliderFromMouse(co2Slider, mx);
+            } else if (activeSlider === "hp") {
+                updateSliderFromMouse(hpSlider, mx);
+            }
+        };
+
+        p.mouseReleased = function () {
+            activeSlider = null;
         };
     }
 
+    // -----------------------------------------------------------------------
+    // Main draw
     // -----------------------------------------------------------------------
     window.VizFilterPanel = {
         draw: function (p, manager, ai, progress) {
@@ -178,7 +213,7 @@
                 return;
             }
 
-            // ---- Card ------------------------------------------------------
+            // Card (same look as your screenshot)
             var cardX = left + 20;
             var cardY = top + 20;
             var cardW = w - 40;
@@ -187,6 +222,7 @@
             // white card, NO border
             p.noStroke();
             p.fill(255);
+            p.rectMode(p.CORNER);
             p.rect(cardX, cardY, cardW, cardH, 6);
 
             // Title + subtitle
@@ -199,7 +235,7 @@
             p.fill(90);
             p.text("Filter by CO\u2082, power, and fuel type.", cardX + 12, cardY + 30);
 
-            // ---- Slider geometry -------------------------------------------
+            // Slider geometry (same as original)
             var sliderX1 = cardX + 40;
             var sliderX2 = cardX + 280;
             var co2Y    = cardY + 80;
@@ -217,14 +253,12 @@
             p.text("Min horsepower: " + hpSlider.value.toFixed(0),
                    cardX + 40, cardY + 114);
 
-            // ---- Draw sliders ----------------------------------------------
+            // Sliders
             function drawSlider(slider, y) {
-                // track
                 p.stroke(210);
                 p.strokeWeight(3);
                 p.line(sliderX1, y, sliderX2, y);
 
-                // handle
                 var t = (slider.value - slider.min) / (slider.max - slider.min);
                 t = Math.max(0, Math.min(1, t));
                 var hx = sliderX1 + t * (sliderX2 - sliderX1);
@@ -240,10 +274,11 @@
             drawSlider(co2Slider, co2Y);
             drawSlider(hpSlider,  hpY);
 
-            // ---- Fuel buttons ----------------------------------------------
+            // Fuel buttons
             p.fill(0);
             p.noStroke();
             p.textAlign(p.LEFT, p.TOP);
+            p.textSize(12);
             p.text("Fuel type:", cardX + 40, cardY + 165);
 
             fuelButtons = [];
@@ -252,6 +287,8 @@
             var btnW = 70;
             var btnH = 22;
             var gap = 10;
+
+            p.rectMode(p.CORNER); // make sure buttons use CORNER mode
 
             for (var i = 0; i < fuelOptions.length; i++) {
                 var x1 = btnX + i * (btnW + gap);
@@ -278,7 +315,9 @@
                 p.text(fuelOptions[i], x1 + btnW / 2, y1 + btnH / 2);
             }
 
-            // ---- Filter + show cars (bottom of card) -----------------------
+            // ----------------------------------------------------------------
+            // Filter + table
+            // ----------------------------------------------------------------
             var maxCo2     = co2Slider.value;
             var minHp      = hpSlider.value;
             var fuelChoice = fuelOptions[selectedFuelIndex];
@@ -313,23 +352,32 @@
             p.textSize(12);
             p.fill(0);
 
-            // ---- TABLE RENDERING ------------------------------------------
+            var totalCount = filtered.length;
+            if (totalCount > 0) {
+                maxPageIndex = Math.max(0, Math.floor((totalCount - 1) / itemsPerPage));
+                if (pageIndex > maxPageIndex) pageIndex = maxPageIndex;
+                if (pageIndex < 0) pageIndex = 0;
+            } else {
+                maxPageIndex = 0;
+                pageIndex = 0;
+            }
+
             if (!filtered.length) {
                 p.text("No cars match your filters.\nTry relaxing CO\u2082 or HP.",
                        listX, listY);
             } else {
-                // show up to 10 rows
-                var maxShown = Math.min(10, filtered.length);
+                var start = pageIndex * itemsPerPage;
+                var end   = Math.min(start + itemsPerPage, totalCount);
+                var shown = end - start;
 
-                p.textSize(12);
-                p.fill(0);
                 p.text(
                     "Top matching cars (lowest CO\u2082 first)\n" +
-                    "Showing " + maxShown + " of " + filtered.length + " matches:",
+                    "Showing " + shown + " of " + totalCount +
+                    " matches (page " + (pageIndex + 1) + " of " + (maxPageIndex + 1) + "):",
                     listX, listY
                 );
 
-                // Simple table layout
+                // Table
                 var tableX  = listX;
                 var tableY  = listY + 30;
                 var rowH    = 20;
@@ -337,7 +385,7 @@
 
                 var cols = [
                     { label: "#",             width: 24 },
-                    { label: "Make & Model",  width: 260 },
+                    { label: "Make & Model",  width: 210 },
                     { label: "CO\u2082 (g/km)", width: 70 },
                     { label: "HP",            width: 45 },
                     { label: "Fuel",          width: 55 }
@@ -356,21 +404,20 @@
                 p.textAlign(p.LEFT, p.CENTER);
                 p.fill(0);
                 p.textSize(11);
-                for (var c = 0; c < cols.length; c++) {
-                    var col = cols[c];
+                for (var c2 = 0; c2 < cols.length; c2++) {
+                    var col = cols[c2];
                     p.text(col.label, xCursor + 4, tableY + headerH / 2);
                     xCursor += col.width;
                 }
 
-                // Rows
-                for (var k = 0; k < maxShown; k++) {
+                // Rows for current page
+                for (var k = start; k < end; k++) {
                     var car = filtered[k];
+                    var rowY = tableY + headerH + (k - start) * rowH;
 
-                    var rowY = tableY + headerH + k * rowH;
-
-                    // Optional zebra striping
+                    // Zebra striping
                     p.noStroke();
-                    if (k % 2 === 0) {
+                    if ((k - start) % 2 === 0) {
                         p.fill(252);
                         p.rect(tableX, rowY, totalW, rowH);
                     }
@@ -390,12 +437,75 @@
                         car.fuel
                     ];
 
-                    for (var c = 0; c < cols.length; c++) {
-                        var col = cols[c];
-                        p.text(cells[c], xCursor + 4, rowY + rowH / 2);
-                        xCursor += col.width;
+                    for (var c3 = 0; c3 < cols.length; c3++) {
+                        var col2 = cols[c3];
+                        p.text(cells[c3], xCursor + 4, rowY + rowH / 2);
+                        xCursor += col2.width;
                     }
                 }
+
+                // Pagination arrows at bottom-right of card
+                var controlsY = cardY + cardH - 24;
+                var controlsXRight = cardX + cardW - 20;
+                var arrowSize = 20;
+                var gapArrows = 6;
+
+                rightArrowBounds = {
+                    x1: controlsXRight - arrowSize,
+                    y1: controlsY - arrowSize / 2,
+                    x2: controlsXRight,
+                    y2: controlsY + arrowSize / 2
+                };
+
+                leftArrowBounds = {
+                    x1: rightArrowBounds.x1 - gapArrows - arrowSize,
+                    y1: rightArrowBounds.y1,
+                    x2: rightArrowBounds.x1 - gapArrows,
+                    y2: rightArrowBounds.y2
+                };
+
+                // Page info text
+                p.textAlign(p.RIGHT, p.CENTER);
+                p.textSize(11);
+                p.fill(0);
+                var pageInfo = "Page " + (pageIndex + 1) + " / " + (maxPageIndex + 1);
+                p.text(pageInfo, leftArrowBounds.x1 - 8, controlsY);
+
+                // Draw left arrow box
+                p.rectMode(p.CORNER);
+                if (pageIndex === 0) {
+                    p.fill(235);
+                    p.stroke(210);
+                } else {
+                    p.fill(245);
+                    p.stroke(200);
+                }
+                p.rect(leftArrowBounds.x1, leftArrowBounds.y1,
+                       leftArrowBounds.x2 - leftArrowBounds.x1,
+                       leftArrowBounds.y2 - leftArrowBounds.y1, 4);
+
+                // Draw right arrow box
+                if (pageIndex === maxPageIndex) {
+                    p.fill(235);
+                    p.stroke(210);
+                } else {
+                    p.fill(245);
+                    p.stroke(200);
+                }
+                p.rect(rightArrowBounds.x1, rightArrowBounds.y1,
+                       rightArrowBounds.x2 - rightArrowBounds.x1,
+                       rightArrowBounds.y2 - rightArrowBounds.y1, 4);
+
+                // Arrow labels
+                p.noStroke();
+                p.fill(0);
+                p.textAlign(p.CENTER, p.CENTER);
+                p.text("<",
+                       (leftArrowBounds.x1 + leftArrowBounds.x2) / 2,
+                       (leftArrowBounds.y1 + leftArrowBounds.y2) / 2);
+                p.text(">",
+                       (rightArrowBounds.x1 + rightArrowBounds.x2) / 2,
+                       (rightArrowBounds.y1 + rightArrowBounds.y2) / 2);
             }
         }
     };
