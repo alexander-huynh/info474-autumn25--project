@@ -115,19 +115,34 @@
             // -------------------------------------------------------------
             // Min/max
             // -------------------------------------------------------------
-            var minCo2 = 30;
-            var maxCo2 = 450;
+            var minCo2   = Infinity, maxCo2   = -Infinity;
+            var minPower = Infinity, maxPower = -Infinity;
 
-            var rawMin = Infinity, rawMax = -Infinity;
             for (var i = 0; i < pts.length; i++) {
                 var d = pts[i];
-                if (d.power < rawMin) rawMin = d.power;
-                if (d.power > rawMax) rawMax = d.power;
+                if (d.power < minPower) minPower = d.power;
+                if (d.power > maxPower) maxPower = d.power;
+                if (d.co2   < minCo2)   minCo2   = d.co2;
+                if (d.co2   > maxCo2)   maxCo2   = d.co2;
             }
 
-            // Cropped domain
-            var minPower = 900;
-            var maxPower = 5000;
+            // Guard against weird data
+            if (!isFinite(minPower) || !isFinite(maxPower)) {
+                minPower = 0;
+                maxPower = 7000;
+            }
+            if (!isFinite(minCo2) || !isFinite(maxCo2)) {
+                minCo2 = 30;
+                maxCo2 = 450;
+            }
+
+            // Round engine size to nearest 500cc, clamp at 0
+            minPower = Math.max(0, Math.floor(minPower / 500) * 500);
+            maxPower = Math.ceil(maxPower / 500) * 500;
+
+            // Round CO₂ to nearest 20 g/km, clamp at 0
+            minCo2 = Math.max(0, Math.floor(minCo2 / 20) * 20);
+            maxCo2 = Math.ceil(maxCo2 / 20) * 20;
 
             function clamp(v, lo, hi) {
                 return Math.max(lo, Math.min(hi, v));
@@ -145,7 +160,22 @@
             p.stroke(220);
             p.strokeWeight(1);
 
-            var xLiters = [1.0, 2.0, 3.0, 4.0, 5.0];
+            var xLiters = [];
+            var minLit = minPower / 1000;
+            var maxLit = maxPower / 1000;
+            var startL = Math.max(1, Math.ceil(minLit));   // don't show 0L engines
+            var endL   = Math.floor(maxLit);
+
+            for (var L = startL; L <= endL; L++) {
+                xLiters.push(L);
+            }
+            // Fallback if range is tiny
+            if (!xLiters.length) {
+                xLiters.push(minLit);
+                if (maxLit > minLit) xLiters.push(maxLit);
+            }
+
+            // vertical gridlines
             for (var iL = 0; iL < xLiters.length; iL++) {
                 var cc = xLiters[iL] * 1000;
                 var xPos = p.map(cc, minPower, maxPower, innerLeft, innerRight);
@@ -209,7 +239,7 @@
             p.text('Engine Size (L)', (innerLeft + innerRight) / 2, innerBottom + 28);
 
             p.push();
-            p.translate(left + 20, (innerTop + innerBottom) / 2);
+            p.translate(left - 10, (innerTop + innerBottom) / 2);
             p.rotate(-Math.PI / 2);
             p.textAlign(p.CENTER, p.TOP);
             p.text('CO₂ NEDC (g/km)', 0, 0);
@@ -225,15 +255,15 @@
             // -------------------------------------------------------------
             // Fuel Filter Buttons (moved to top-right)
             // -------------------------------------------------------------
-            var btnY = innerTop + 4;
+            var btnY = innerTop - 24 + 14 + 6;   // same vertical logic as scatter2
             var activeMode = mode;
 
-            // Right-align the group by computing total width:
-            var spacing = 12;  // tighter spacing so they fit nicely
+            // Compute total width of all 3 buttons + spacing
+            var spacing = 20;
             var totalW = btns[0].w + btns[1].w + btns[2].w + spacing * 2;
 
-            // Anchor to innerRight, with slight margin
-            var startX = innerRight - totalW - 4;
+            // Center horizontally
+            var startX = left + (w - totalW) / 2;
 
             for (var bi = 0; bi < btns.length; bi++) {
                 var b = btns[bi];
@@ -380,10 +410,6 @@
             var xMedium = p.map(2300, minPower, maxPower, innerLeft, innerRight);
             var xLarge  = p.map(3500, minPower, maxPower, innerLeft, innerRight);
 
-            drawEmoji("🚗", xSmall,  iconY);
-            drawEmoji("🚙", xMedium, iconY);
-            drawEmoji("🚐", xLarge,  iconY);
-
             // -------------------------------------------------------------
             // Legend
             // -------------------------------------------------------------
@@ -394,10 +420,6 @@
             var legendX = innerLeft + 6;
             var legendY = innerTop + 4;
             var legendSpacing = 16;
-
-            p.text("🚗 Small cars (1.2–1.6L)",          legendX, legendY);
-            p.text("🚙 Sedans / crossovers (2.0–2.5L)", legendX, legendY + legendSpacing);
-            p.text("🚐 Large SUVs / vans (3.0–4.0L)",    legendX, legendY + legendSpacing * 2);
 
             // -------------------------------------------------------------
             // Caption
