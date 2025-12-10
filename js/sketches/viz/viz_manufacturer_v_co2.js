@@ -9,6 +9,15 @@
     var leftArrowBounds = null;
     var rightArrowBounds = null;
 
+    // Format manufacturer name to title case, but keep short names (acronyms) as-is
+    function formatMake(str) {
+        if (!str) return str;
+        // Keep short names (likely acronyms like BMW, MG, KIA) as-is
+        if (str.length <= 3) return str.toUpperCase();
+        // Otherwise convert to title case
+        return str.toLowerCase().replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+    }
+
     window.VizBar2 = {
 
         // sorting mode: "co2" | "count" | "name"
@@ -131,7 +140,7 @@
                     var combinedAvg = (o.pSum + o.dSum) / total;
 
                     arr.push({
-                        name: k,
+                        name: formatMake(k),
                         petrol: petrolAvg,
                         diesel: dieselAvg,
                         combined: combinedAvg,
@@ -170,20 +179,20 @@
             var endIdx = Math.min(startIdx + itemsPerPage, totalCount);
             var bars = allBars.slice(startIdx, endIdx);
 
-//------------------------------------------------------------------
-// 2. SCALE MAX (based on ALL data for consistent scaling across pages)
-//------------------------------------------------------------------
-var maxVal = 0;
-if (this.barMode === "combined") {
-    for (var i = 0; i < allBars.length; i++) {
-        if (allBars[i].combined > maxVal) maxVal = allBars[i].combined;
-    }
-} else {
-    for (var i = 0; i < allBars.length; i++) {
-        if (allBars[i].petrol && allBars[i].petrol > maxVal) maxVal = allBars[i].petrol;
-        if (allBars[i].diesel && allBars[i].diesel > maxVal) maxVal = allBars[i].diesel;
-    }
-}
+            //------------------------------------------------------------------
+            // 2. SCALE MAX (based on ALL data for consistent scaling across pages)
+            //------------------------------------------------------------------
+            var maxVal = 0;
+            if (this.barMode === "combined") {
+                for (var i = 0; i < allBars.length; i++) {
+                    if (allBars[i].combined > maxVal) maxVal = allBars[i].combined;
+                }
+            } else {
+                for (var i = 0; i < allBars.length; i++) {
+                    if (allBars[i].petrol && allBars[i].petrol > maxVal) maxVal = allBars[i].petrol;
+                    if (allBars[i].diesel && allBars[i].diesel > maxVal) maxVal = allBars[i].diesel;
+                }
+            }
 
             var rowH = (availH - 40) / itemsPerPage; // Reserve space for arrows
             var barMaxW = availW - 150;
@@ -293,7 +302,7 @@ if (this.barMode === "combined") {
 
                     var w = (m.combined / maxVal) * barMaxW;
 
-                    p.fill(80, 150, 200, 220);
+                    p.fill(40, 120, 200);
                     p.noStroke();
                     p.rect(baseX, yCenter - rowH * 0.25, w, rowH * 0.5, 4);
 
@@ -305,53 +314,53 @@ if (this.barMode === "combined") {
                     continue;
                 }
 
-//--------------------------------------------------------------
-// DUAL MODE (PETROL + DIESEL)
-//--------------------------------------------------------------
-var barH = rowH * 0.28;
+                //--------------------------------------------------------------
+                // DUAL MODE (PETROL + DIESEL)
+                //--------------------------------------------------------------
+                var barH = rowH * 0.28;
 
-var yPetrol = yCenter - barH - 2;
-var yDiesel = yCenter + 2;
+                var yPetrol = yCenter - barH - 2;
+                var yDiesel = yCenter + 2;
 
-// Petrol bar
-if (m.petrol !== null) {
-    var wP = (m.petrol / maxVal) * barMaxW;
-    p.fill(240, 140, 40, 220);
-    p.noStroke();
-    p.rect(baseX, yPetrol - barH / 2, wP, barH, 3);
+                // Petrol bar
+                if (m.petrol !== null) {
+                    var wP = (m.petrol / maxVal) * barMaxW;
+                    p.fill(240, 140, 40, 220);
+                    p.noStroke();
+                    p.rect(baseX, yPetrol - barH / 2, wP, barH, 3);
 
-    p.fill(0);
-    p.textAlign(p.LEFT, p.CENTER);
-    p.text(Math.round(m.petrol) + " g/km",
-           baseX + wP + 6, yPetrol);
-} else {
-    // No petrol data - show placeholder
-    p.fill(180);
-    p.textAlign(p.LEFT, p.CENTER);
-    p.textSize(12);
-    p.text("No petrol data", baseX, yPetrol);
-    p.textSize(16);
-}
+                    p.fill(0);
+                    p.textAlign(p.LEFT, p.CENTER);
+                    p.text(Math.round(m.petrol) + " g/km",
+                           baseX + wP + 6, yPetrol);
+                } else {
+                    // No petrol data - show placeholder
+                    p.fill(180);
+                    p.textAlign(p.LEFT, p.CENTER);
+                    p.textSize(12);
+                    p.text("No petrol data", baseX, yPetrol);
+                    p.textSize(16);
+                }
 
-// Diesel bar
-if (m.diesel !== null) {
-    var wD = (m.diesel / maxVal) * barMaxW;
-    p.fill(60, 170, 70, 220);
-    p.noStroke();
-    p.rect(baseX, yDiesel - barH / 2, wD, barH, 3);
+                // Diesel bar
+                if (m.diesel !== null) {
+                    var wD = (m.diesel / maxVal) * barMaxW;
+                    p.fill(60, 170, 70, 220);
+                    p.noStroke();
+                    p.rect(baseX, yDiesel - barH / 2, wD, barH, 3);
 
-    p.fill(0);
-    p.textAlign(p.LEFT, p.CENTER);
-    p.text(Math.round(m.diesel) + " g/km",
-           baseX + wD + 6, yDiesel);
-} else {
-    // No diesel data - show placeholder
-    p.fill(180);
-    p.textAlign(p.LEFT, p.CENTER);
-    p.textSize(12);
-    p.text("No diesel data", baseX, yDiesel);
-    p.textSize(16);
-}
+                    p.fill(0);
+                    p.textAlign(p.LEFT, p.CENTER);
+                    p.text(Math.round(m.diesel) + " g/km",
+                           baseX + wD + 6, yDiesel);
+                } else {
+                    // No diesel data - show placeholder
+                    p.fill(180);
+                    p.textAlign(p.LEFT, p.CENTER);
+                    p.textSize(12);
+                    p.text("No diesel data", baseX, yDiesel);
+                    p.textSize(16);
+                }
             }
 
             //------------------------------------------------------------------

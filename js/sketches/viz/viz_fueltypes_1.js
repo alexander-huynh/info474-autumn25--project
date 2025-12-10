@@ -61,6 +61,12 @@
                 avg[c] = counts[c] > 0 ? (sums[c] / counts[c]) : null;
             });
 
+            // --- color map ---------------------------------------------------
+            var barColors = {
+                Petrol: p.color(255, 140, 0),  // orange
+                Diesel: p.color(34, 139, 34)   // green
+            };
+
             // --- layout ------------------------------------------------------
             var cardX = left + 20;
             var cardY = top + 20;
@@ -71,11 +77,31 @@
             p.fill(255);
             p.rect(cardX, cardY, cardW, cardH, 6);
 
-            p.fill(0);
+            // --- Title with colored Petrol/Diesel ----------------------------
             p.textAlign(p.LEFT, p.TOP);
             p.textSize(24);
-            p.text('Fuel Types: Where Emissions Begin (Petrol vs Diesel)',
-                   cardX + 12, cardY + 10);
+
+            var titleX = cardX + 12;
+            var titleY = cardY + 10;
+
+            p.fill(0);
+            p.text('Fuel Types: Where Emissions Begin (', titleX, titleY);
+            titleX += p.textWidth('Fuel Types: Where Emissions Begin (');
+
+            p.fill(255, 140, 0); // orange for Petrol
+            p.text('Petrol', titleX, titleY);
+            titleX += p.textWidth('Petrol');
+
+            p.fill(0);
+            p.text(' vs ', titleX, titleY);
+            titleX += p.textWidth(' vs ');
+
+            p.fill(34, 139, 34); // green for Diesel
+            p.text('Diesel', titleX, titleY);
+            titleX += p.textWidth('Diesel');
+
+            p.fill(0);
+            p.text(')', titleX, titleY);
 
             var plotX = cardX + 55;
             var plotY = cardY + 40;
@@ -127,12 +153,6 @@
 
             var hovered = null;
 
-            // NEW COLOR MAP
-            var barColors = {
-                Petrol: p.color(255, 140, 0),  // orange
-                Diesel: p.color(34, 139, 34)   // green
-            };
-
             p.textAlign(p.CENTER, p.TOP);
             p.textSize(11);
 
@@ -154,8 +174,8 @@
                 p.fill(barColors[cat] || p.color(0, 120, 220));
                 p.rect(bx, by, barWidth, hVal);
 
-                // label
-                p.fill(0);
+                // x-axis label - colored to match bar
+                p.fill(barColors[cat]);
                 p.textSize(22);
                 p.text(cat, bx + barWidth / 2, baseY + 4);
 

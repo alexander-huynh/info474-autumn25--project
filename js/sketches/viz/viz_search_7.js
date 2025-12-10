@@ -401,7 +401,7 @@
                 var avgCo2Len = barW * (avgCo2 / maxCo2);
                 p.rect(co2X, co2BarY + 32, avgCo2Len, barH, 3);
                 p.fill(100);
-                p.text(avgCo2.toFixed(0) + " avg", co2X + avgCo2Len + 10, co2BarY + 36);
+                p.text(avgCo2.toFixed(0) + "", co2X + avgCo2Len + 10, co2BarY + 36);
 
                 // Delta label
                 var dCo2 = car.co2 - avgCo2;
@@ -443,7 +443,7 @@
                 var avgHpLen = barW * (avgHp / maxHp);
                 p.rect(hpX, hpBarY + 32, avgHpLen, barH, 3);
                 p.fill(100);
-                p.text(avgHp.toFixed(0) + " avg", hpX + avgHpLen + 10, hpBarY + 36);
+                p.text(avgHp.toFixed(0) + "", hpX + avgHpLen + 10, hpBarY + 36);
 
                 // Delta label
                 var dHp = car.hp - avgHp;

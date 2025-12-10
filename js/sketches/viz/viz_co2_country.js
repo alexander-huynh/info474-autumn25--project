@@ -297,7 +297,7 @@
                 if (this.mode === "combined") {
                     let w = (b.combined / maxVal) * barMaxW;
 
-                    p.fill(80,150,200,220);
+                    p.fill(40, 120, 200);
                     p.noStroke();
                     p.rect(baseX, yCenter - rowH*0.25, w, rowH*0.5, 4);
 
