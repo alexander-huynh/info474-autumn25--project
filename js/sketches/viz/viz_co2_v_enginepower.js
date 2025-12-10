@@ -164,7 +164,8 @@
         var x2 = p.map(80, minPower, maxPower, innerLeft, innerRight);
         x1 = Math.max(x1, innerLeft);
         x2 = Math.min(x2, innerRight);
-        if (x2 > x1) {
+        var econBand = { x1: x1, x2: x2, visible: x2 > x1 };
+        if (econBand.visible) {
           p.fill(100, 180, 255, 50); // light blue
           p.rect(x1, innerTop, x2 - x1, innerBottom - innerTop);
         }
@@ -174,8 +175,9 @@
         x2 = p.map(150, minPower, maxPower, innerLeft, innerRight);
         x1 = Math.max(x1, innerLeft);
         x2 = Math.min(x2, innerRight);
-        if (x2 > x1) {
-          p.fill(100, 200, 100, 50); // light green
+        var stdBand = { x1: x1, x2: x2, visible: x2 > x1 };
+        if (stdBand.visible) {
+          p.fill(210, 180, 140, 60); // tan/beige
           p.rect(x1, innerTop, x2 - x1, innerBottom - innerTop);
         }
 
@@ -184,7 +186,8 @@
         x2 = p.map(300, minPower, maxPower, innerLeft, innerRight);
         x1 = Math.max(x1, innerLeft);
         x2 = Math.min(x2, innerRight);
-        if (x2 > x1) {
+        var suvBand = { x1: x1, x2: x2, visible: x2 > x1 };
+        if (suvBand.visible) {
           p.fill(255, 220, 100, 50); // light yellow
           p.rect(x1, innerTop, x2 - x1, innerBottom - innerTop);
         }
@@ -193,38 +196,44 @@
         x1 = p.map(300, minPower, maxPower, innerLeft, innerRight);
         x2 = innerRight;
         x1 = Math.max(x1, innerLeft);
-        if (x2 > x1) {
+        var luxBand = { x1: x1, x2: x2, visible: x2 > x1 };
+        if (luxBand.visible) {
           p.fill(255, 150, 150, 50); // light red/pink
           p.rect(x1, innerTop, x2 - x1, innerBottom - innerTop);
         }
 
-        // Labels at bottom of bands
+        // Labels below the buttons (bold, staggered to avoid collision)
         p.textSize(11);
+        p.textStyle(p.BOLD);
+        p.fill(50);
+
+        var labelY1 = innerTop + 50;
+        var labelY2 = innerTop + 64; // staggered row
+
+        // Draw labels - alternate rows to prevent overlap
         p.textAlign(p.CENTER, p.TOP);
-        p.fill(60);
-
-        var labelY = innerBottom - 20;
-
-        // Only draw label if band is visible
-        var econX = p.map(40, minPower, maxPower, innerLeft, innerRight);
-        if (econX > innerLeft && econX < innerRight) {
-          p.text("Economy", econX, labelY);
+        
+        if (econBand.visible && econBand.x2 - econBand.x1 > 30) {
+          var econX = (econBand.x1 + econBand.x2) / 2;
+          p.text("Economy", econX, labelY1);
         }
 
-        var stdX = p.map(115, minPower, maxPower, innerLeft, innerRight);
-        if (stdX > innerLeft && stdX < innerRight) {
-          p.text("Standard", stdX, labelY);
+        if (stdBand.visible && stdBand.x2 - stdBand.x1 > 30) {
+          var stdX = (stdBand.x1 + stdBand.x2) / 2;
+          p.text("Standard", stdX, labelY2); // staggered down
         }
 
-        var suvX = p.map(225, minPower, maxPower, innerLeft, innerRight);
-        if (suvX > innerLeft && suvX < innerRight) {
-          p.text("SUV/Sport", suvX, labelY);
+        if (suvBand.visible && suvBand.x2 - suvBand.x1 > 40) {
+          var suvX = (suvBand.x1 + suvBand.x2) / 2;
+          p.text("SUV/Sport", suvX, labelY1);
         }
 
-        var luxX = p.map(450, minPower, maxPower, innerLeft, innerRight);
-        if (luxX > innerLeft && luxX < innerRight) {
-          p.text("Luxury", luxX, labelY);
+        if (luxBand.visible && luxBand.x2 - luxBand.x1 > 30) {
+          var luxX = (luxBand.x1 + luxBand.x2) / 2;
+          p.text("Luxury", luxX, labelY2); // staggered down
         }
+
+        p.textStyle(p.NORMAL);
       }
 
       //------------------------------------------------------------------
@@ -247,7 +256,10 @@
         var t2 = gy / yticks;
         var yv = Math.round(p.lerp(minCo2, maxCo2, t2) / 20) * 20;
         var yPos = p.map(yv, minCo2, maxCo2, innerBottom, innerTop);
-        p.line(innerLeft, yPos, innerRight, yPos);
+        // Skip drawing gridline at the very top
+        if (gy < yticks) {
+          p.line(innerLeft, yPos, innerRight, yPos);
+        }
       }
 
       //------------------------------------------------------------------
@@ -288,7 +300,7 @@
       p.text('Engine Power (kW)', (innerLeft + innerRight) / 2, innerBottom + 24);
 
       p.push();
-      p.translate(left + 20, (innerTop + innerBottom) / 2);
+      p.translate(left + 6, (innerTop + innerBottom) / 2);
       p.rotate(-Math.PI / 2);
       p.text('CO₂ NEDC (g/km)', 0, 0);
       p.pop();
