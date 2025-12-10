@@ -14,7 +14,8 @@
         COUNTRY_NAMES: {
             AT: "Austria", BE: "Belgium", BG: "Bulgaria", CY: "Cyprus", CZ: "Czechia",
             DE: "Germany", DK: "Denmark", EE: "Estonia", EL: "Greece", ES: "Spain",
-            FI: "Finland", FR: "France", HR: "Croatia", HU: "Hungary", IE: "Ireland",
+            FI: "Finland", FR: "France", GB: "United Kingdom", GR: "Greece",
+            HR: "Croatia", HU: "Hungary", IE: "Ireland",
             IT: "Italy", LT: "Lithuania", LU: "Luxembourg", LV: "Latvia", MT: "Malta",
             NL: "Netherlands", PL: "Poland", PT: "Portugal", RO: "Romania", SE: "Sweden",
             SI: "Slovenia", SK: "Slovakia"
@@ -23,7 +24,8 @@
         COUNTRY_FLAGS: {
             AT: "🇦🇹", BE: "🇧🇪", BG: "🇧🇬", CY: "🇨🇾", CZ: "🇨🇿",
             DE: "🇩🇪", DK: "🇩🇰", EE: "🇪🇪", EL: "🇬🇷", ES: "🇪🇸",
-            FI: "🇫🇮", FR: "🇫🇷", HR: "🇭🇷", HU: "🇭🇺", IE: "🇮🇪",
+            FI: "🇫🇮", FR: "🇫🇷", GB: "🇬🇧", GR: "🇬🇷",
+            HR: "🇭🇷", HU: "🇭🇺", IE: "🇮🇪",
             IT: "🇮🇹", LT: "🇱🇹", LU: "🇱🇺", LV: "🇱🇻", MT: "🇲🇹",
             NL: "🇳🇱", PL: "🇵🇱", PT: "🇵🇹", RO: "🇷🇴", SE: "🇸🇪",
             SI: "🇸🇮", SK: "🇸🇰"
@@ -63,7 +65,7 @@
 
                 const VALID_MS = new Set([
                     "AT","BE","BG","CY","CZ","DE","DK","EE","EL","ES",
-                    "FI","FR","HR","HU","IE","IT","LT","LU","LV","MT",
+                    "FI","FR","GB","GR","HR","HU","IE","IT","LT","LU","LV","MT",
                     "NL","PL","PT","RO","SE","SI","SK"
                 ]);
 
@@ -271,17 +273,8 @@
             p.textAlign(p.CENTER, p.TOP);
             p.textSize(22);
             p.fill(0);
-            p.text("Average CO₂ Emissions by Country",
+            p.text("Average CO₂ Emissions by European Country",
                    left + availW/2, top);
-
-            p.textSize(14);
-            p.text(
-                this.mode === "combined"
-                ? "Combined Fleet CO₂ (NEDC)"
-                : "Petrol vs Diesel CO₂ (NEDC)",
-                left + availW/2,
-                top + 30
-            );
 
             var plotTop = top + 70;
 

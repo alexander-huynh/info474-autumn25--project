@@ -24,10 +24,19 @@
     var selectedFuelIndex = 0;
     var fuelButtons = [];
 
+    // Search state
+    var searchQuery = "";
+    var searchPlaceholder = "e.g., BMW, Prius, Golf";
+    var isSearchPlaceholder = true;
+    var searchInputBounds = null;
+    var searchInputFocused = false;
+    var searchSelectAll = false;
+
     // Pagination
     var itemsPerPage = 5;
     var pageIndex = 0;
     var maxPageIndex = 0;
+    var maxDisplayResults = 100; // Cap visible results
     var leftArrowBounds = null;
     var rightArrowBounds = null;
 
@@ -121,7 +130,7 @@
         if (eventsBound) return;
         eventsBound = true;
 
-        // MOUSEDOWN - handle clicks on sliders, buttons, arrows
+        // MOUSEDOWN - handle clicks on sliders, buttons, arrows, search
         p.canvas.addEventListener("mousedown", function (evt) {
             if (manager.state.activeIndex !== 6) return;
 
@@ -130,6 +139,20 @@
             var my = evt.clientY - rect.top;
 
             activeSlider = null;
+
+            // Check search input click
+            if (searchInputBounds &&
+                mx >= searchInputBounds.x && mx <= searchInputBounds.x + searchInputBounds.w &&
+                my >= searchInputBounds.y && my <= searchInputBounds.y + searchInputBounds.h) {
+                searchInputFocused = true;
+                searchSelectAll = (searchQuery.length > 0 && !isSearchPlaceholder);
+                window.__searchInputFocused = true;
+                return;
+            } else {
+                searchInputFocused = false;
+                searchSelectAll = false;
+                window.__searchInputFocused = false;
+            }
 
             // CO2 slider
             if (co2Slider.bounds) {
@@ -202,6 +225,60 @@
         window.addEventListener("mouseup", function (evt) {
             activeSlider = null;
         });
+
+        // Keyboard events for search input
+        p.keyTyped = function () {
+            if (currentAi !== 6 || !searchInputFocused) return;
+
+            if (p.key.length === 1 && searchQuery.length < 30) {
+                var ch = p.key;
+                if (ch >= " " && ch <= "~") {
+                    if (isSearchPlaceholder || searchSelectAll) {
+                        searchQuery = "";
+                        isSearchPlaceholder = false;
+                        searchSelectAll = false;
+                    }
+                    searchQuery += ch;
+                    pageIndex = 0;
+                }
+            }
+        };
+
+        p.keyPressed = function () {
+            if (currentAi !== 6 || !searchInputFocused) return;
+
+            // Handle SPACE key
+            if (p.keyCode === 32) {
+                if (searchQuery.length < 30) {
+                    if (isSearchPlaceholder || searchSelectAll) {
+                        searchQuery = "";
+                        isSearchPlaceholder = false;
+                        searchSelectAll = false;
+                    }
+                    searchQuery += " ";
+                    pageIndex = 0;
+                }
+                return false;
+            }
+
+            if (p.keyCode === p.BACKSPACE) {
+                if (isSearchPlaceholder || searchSelectAll) {
+                    searchQuery = "";
+                    isSearchPlaceholder = false;
+                    searchSelectAll = false;
+                } else if (searchQuery.length > 0) {
+                    searchQuery = searchQuery.slice(0, -1);
+                }
+                pageIndex = 0;
+                return false;
+            }
+
+            if (p.keyCode === p.ENTER || p.keyCode === p.RETURN) {
+                searchSelectAll = false;
+                pageIndex = 0;
+                return false;
+            }
+        };
     }
 
     // -----------------------------------------------------------------------
@@ -302,39 +379,81 @@
             var gap = 12;
 
             p.rectMode(p.CORNER);
-for (var i = 0; i < fuelOptions.length; i++) {
-    var x1 = btnX + i * (btnW + gap);
-    var y1 = btnY;
-    var x2 = x1 + btnW;
-    var y2 = y1 + btnH;
+            for (var i = 0; i < fuelOptions.length; i++) {
+                var x1 = btnX + i * (btnW + gap);
+                var y1 = btnY;
+                var x2 = x1 + btnW;
+                var y2 = y1 + btnH;
 
-    fuelButtons.push({ x1: x1, y1: y1, x2: x2, y2: y2, label: fuelOptions[i] });
+                fuelButtons.push({ x1: x1, y1: y1, x2: x2, y2: y2, label: fuelOptions[i] });
 
-    var isActive = (i === selectedFuelIndex);
-    var label = fuelOptions[i];
+                var isActive = (i === selectedFuelIndex);
+                var label = fuelOptions[i];
 
-    // Color-coded backgrounds based on fuel type
-    if (label === "Any") {
-        // Blue for "Any"
-        p.fill(isActive ? p.color(40, 120, 200) : p.color(180, 200, 230));
-    } else if (label === "Petrol") {
-        // Orange for Petrol
-        p.fill(isActive ? p.color(255, 140, 0) : p.color(255, 210, 160));
-    } else if (label === "Diesel") {
-        // Green for Diesel
-        p.fill(isActive ? p.color(34, 139, 34) : p.color(160, 210, 160));
-    }
+                // Color-coded backgrounds based on fuel type
+                if (label === "Any") {
+                    p.fill(isActive ? p.color(40, 120, 200) : p.color(180, 200, 230));
+                } else if (label === "Petrol") {
+                    p.fill(isActive ? p.color(255, 140, 0) : p.color(255, 210, 160));
+                } else if (label === "Diesel") {
+                    p.fill(isActive ? p.color(34, 139, 34) : p.color(160, 210, 160));
+                }
 
-    p.stroke(isActive ? 0 : 220, isActive ? 60 : 255);
-    p.rect(x1, y1, btnW, btnH, 4);
+                p.stroke(isActive ? 0 : 220, isActive ? 60 : 255);
+                p.rect(x1, y1, btnW, btnH, 4);
 
-    // Label - white when active, dark when inactive
-    p.noStroke();
-    p.fill(isActive ? 255 : 60);
-    p.textAlign(p.CENTER, p.CENTER);
-    p.textSize(16);
-    p.text(label, x1 + btnW / 2, y1 + btnH / 2);
-}
+                // Label - white when active, dark when inactive
+                p.noStroke();
+                p.fill(isActive ? 255 : 60);
+                p.textAlign(p.CENTER, p.CENTER);
+                p.textSize(16);
+                p.text(label, x1 + btnW / 2, y1 + btnH / 2);
+            }
+
+            // ----------------------------------------------------------------
+            // Search input (right side of controls)
+            // ----------------------------------------------------------------
+            var searchX = cardX + 350;
+            var searchY = cardY + 80;
+            var searchW = cardW - 370;
+            var searchH = 32;
+
+            searchInputBounds = { x: searchX, y: searchY, w: searchW, h: searchH };
+
+            // Search label
+            p.fill(0);
+            p.noStroke();
+            p.textAlign(p.LEFT, p.TOP);
+            p.textSize(14);
+            p.text("Search make/model:", searchX, searchY - 18);
+
+            // Search input box
+            p.stroke(searchInputFocused ? p.color(40, 120, 200) : p.color(210));
+            p.strokeWeight(1.5);
+            p.fill(255);
+            p.rect(searchX, searchY, searchW, searchH, 4);
+
+            // Search text
+            p.noStroke();
+            p.textAlign(p.LEFT, p.CENTER);
+            p.textSize(14);
+
+            var displayText = isSearchPlaceholder ? searchPlaceholder : searchQuery;
+            if (isSearchPlaceholder && !searchInputFocused) {
+                p.fill(160);
+            } else {
+                p.fill(0);
+            }
+
+            // Selection highlight
+            if (searchInputFocused && searchSelectAll && searchQuery.length > 0) {
+                var tw = p.textWidth(searchQuery);
+                p.fill(200, 220, 255);
+                p.rect(searchX + 6, searchY + 4, tw + 4, searchH - 8, 2);
+                p.fill(0);
+            }
+
+            p.text(displayText, searchX + 8, searchY + searchH / 2);
 
             // ----------------------------------------------------------------
             // Filter + table
@@ -342,6 +461,7 @@ for (var i = 0; i < fuelOptions.length; i++) {
             var maxCo2 = co2Slider.value;
             var minHp = hpSlider.value;
             var fuelChoice = fuelOptions[selectedFuelIndex];
+            var searchTerm = isSearchPlaceholder ? "" : searchQuery.trim().toLowerCase();
 
             var filtered = [];
             for (var idx = 0; idx < data.length; idx++) {
@@ -354,6 +474,12 @@ for (var i = 0; i < fuelOptions.length; i++) {
                 if (co2 > maxCo2) continue;
                 if (hp < minHp) continue;
                 if (fuelChoice !== "Any" && fuel !== fuelChoice) continue;
+
+                // Search filter
+                if (searchTerm) {
+                    var makeModel = (getMake(d) + " " + getModel(d)).toLowerCase();
+                    if (makeModel.indexOf(searchTerm) === -1) continue;
+                }
 
                 filtered.push({
                     make: getMake(d),
@@ -374,8 +500,10 @@ for (var i = 0; i < fuelOptions.length; i++) {
             p.fill(0);
 
             var totalCount = filtered.length;
-            if (totalCount > 0) {
-                maxPageIndex = Math.max(0, Math.floor((totalCount - 1) / itemsPerPage));
+            var displayCount = Math.min(totalCount, maxDisplayResults); // Cap at 100
+
+            if (displayCount > 0) {
+                maxPageIndex = Math.max(0, Math.floor((displayCount - 1) / itemsPerPage));
                 if (pageIndex > maxPageIndex) pageIndex = maxPageIndex;
                 if (pageIndex < 0) pageIndex = 0;
             } else {
@@ -388,13 +516,15 @@ for (var i = 0; i < fuelOptions.length; i++) {
                 p.text("No cars match your filters.\nTry relaxing CO\u2082 or HP.", listX, listY);
             } else {
                 var start = pageIndex * itemsPerPage;
-                var end = Math.min(start + itemsPerPage, totalCount);
+                var end = Math.min(start + itemsPerPage, displayCount);
                 var shown = end - start;
 
-                p.text(
-                    "Top matching cars (lowest CO\u2082 first) — Showing " + shown + " of " + totalCount + " matches",
-                    listX, listY
-                );
+                // Show count info
+                var countText = "Top matching cars (lowest CO\u2082 first) — Showing " + shown + " of " + totalCount + " matches";
+                if (totalCount > maxDisplayResults) {
+                    countText = "Top matching cars (lowest CO\u2082 first) — Showing top " + displayCount + " of " + totalCount;
+                }
+                p.text(countText, listX, listY);
 
                 // Table
                 var tableX = listX;
@@ -484,11 +614,12 @@ for (var i = 0; i < fuelOptions.length; i++) {
                     y2: rightArrowBounds.y2
                 };
 
-                // Page info text
+                // Simplified page info - just show current page
                 p.textAlign(p.RIGHT, p.CENTER);
                 p.textSize(15);
                 p.fill(0);
-                var pageInfo = (pageIndex + 1) + " / " + (maxPageIndex + 1);
+                p.noStroke();
+                var pageInfo = "Page " + (pageIndex + 1);
                 p.text(pageInfo, leftArrowBounds.x1 - 12, controlsY);
 
                 // Draw left arrow box
@@ -518,12 +649,14 @@ for (var i = 0; i < fuelOptions.length; i++) {
 
                 // Arrow labels
                 p.noStroke();
-                p.fill(0);
+                p.fill(pageIndex === 0 ? 180 : 0);
                 p.textAlign(p.CENTER, p.CENTER);
                 p.textSize(16);
                 p.text("<",
                     (leftArrowBounds.x1 + leftArrowBounds.x2) / 2,
                     (leftArrowBounds.y1 + leftArrowBounds.y2) / 2);
+
+                p.fill(pageIndex === maxPageIndex ? 180 : 0);
                 p.text(">",
                     (rightArrowBounds.x1 + rightArrowBounds.x2) / 2,
                     (rightArrowBounds.y1 + rightArrowBounds.y2) / 2);
