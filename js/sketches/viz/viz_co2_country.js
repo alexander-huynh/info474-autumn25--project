@@ -20,6 +20,15 @@
             SI: "Slovenia", SK: "Slovakia"
         },
 
+        COUNTRY_FLAGS: {
+            AT: "🇦🇹", BE: "🇧🇪", BG: "🇧🇬", CY: "🇨🇾", CZ: "🇨🇿",
+            DE: "🇩🇪", DK: "🇩🇰", EE: "🇪🇪", EL: "🇬🇷", ES: "🇪🇸",
+            FI: "🇫🇮", FR: "🇫🇷", HR: "🇭🇷", HU: "🇭🇺", IE: "🇮🇪",
+            IT: "🇮🇹", LT: "🇱🇹", LU: "🇱🇺", LV: "🇱🇻", MT: "🇲🇹",
+            NL: "🇳🇱", PL: "🇵🇱", PT: "🇵🇹", RO: "🇷🇴", SE: "🇸🇪",
+            SI: "🇸🇮", SK: "🇸🇰"
+        },
+
         // sorting + mode toggles
         sortMode: "co2",       // "co2" | "name"
         mode: "combined",      // "combined" | "dual"
@@ -161,7 +170,7 @@
             }
 
             var rowH = (availH - 40) / itemsPerPage; // Reserve space for arrows
-            var barMaxW = availW - 150;
+            var barMaxW = availW - 170; // Adjusted for flag space
             p.push();
 
             // --------------------------------------------------------
@@ -284,12 +293,18 @@
                 let b = bars[i];
                 let yCenter = plotTop + i * rowH + rowH/2;
 
-                // Country label
-                p.fill(30);
+                // Flag on leftmost side
+                var flag = window.VizCountry.COUNTRY_FLAGS[b.name] || "";
                 p.textAlign(p.LEFT, p.CENTER);
-                p.text(window.VizCountry.COUNTRY_NAMES[b.name] || b.name, left, yCenter);
+                p.textSize(20);
+                p.text(flag, left, yCenter);
 
-                let baseX = left + 120;
+                // Country name after flag
+                p.textSize(16);
+                p.fill(30);
+                p.text(window.VizCountry.COUNTRY_NAMES[b.name] || b.name, left + 30, yCenter);
+
+                let baseX = left + 140; // Adjusted for flag + name space
 
                 // ---------------------------------------------
                 // COMBINED MODE

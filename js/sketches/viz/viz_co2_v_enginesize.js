@@ -173,10 +173,9 @@
             if (showBands) {
                 p.noStroke();
 
-                // Economy: 0.8-1.5L
-                var x1 = p.map(800, minPower, maxPower, innerLeft, innerRight);
+                // Economy: 0-1.5L (start from left edge)
+                var x1 = innerLeft;
                 var x2 = p.map(1500, minPower, maxPower, innerLeft, innerRight);
-                x1 = Math.max(x1, innerLeft);
                 x2 = Math.min(x2, innerRight);
                 var econBand = { x1: x1, x2: x2, visible: x2 > x1 };
                 if (econBand.visible) {

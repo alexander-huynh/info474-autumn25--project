@@ -141,7 +141,7 @@
         eventsBound = true;
 
         p.keyTyped = function () {
-            if (currentAi !== 7 || !inputFocused) return;  // was: if (currentAi !== 6 || !inputFocused) return;
+            if (currentAi !== 7 || !inputFocused) return;
 
             if (p.key.length === 1 && searchQuery.length < 30) {
                 var ch = p.key;
@@ -203,11 +203,11 @@
                 // click inside: focus and visually "select all"
                 inputFocused = true;
                 inputSelectAll = (searchQuery.length > 0);
-                window.__searchInputFocused = true;  // ADD THIS
+                window.__searchInputFocused = true;
             } else {
                 inputFocused = false;
                 inputSelectAll = false;
-                window.__searchInputFocused = false;  // ADD THIS
+                window.__searchInputFocused = false;
             }
         };
     }
@@ -403,7 +403,7 @@
                 p.fill(100);
                 p.text(avgCo2.toFixed(0) + "", co2X + avgCo2Len + 10, co2BarY + 36);
 
-                // Delta label
+                // Delta label with units
                 var dCo2 = car.co2 - avgCo2;
                 p.textSize(15);
                 if (Math.abs(dCo2) < 1) {
@@ -411,10 +411,10 @@
                     p.text("same as avg", co2X, co2BarY + 68);
                 } else if (dCo2 < 0) {
                     p.fill(34, 139, 34); // green
-                    p.text("\u2193 " + Math.abs(dCo2).toFixed(0) + " lower", co2X, co2BarY + 68);
+                    p.text("\u2193 " + Math.abs(dCo2).toFixed(0) + " g/km lower", co2X, co2BarY + 68);
                 } else {
                     p.fill(200, 80, 80); // red
-                    p.text("\u2191 " + dCo2.toFixed(0) + " higher", co2X, co2BarY + 68);
+                    p.text("\u2191 " + dCo2.toFixed(0) + " g/km higher", co2X, co2BarY + 68);
                 }
 
                 // HP column (right)
@@ -445,7 +445,7 @@
                 p.fill(100);
                 p.text(avgHp.toFixed(0) + "", hpX + avgHpLen + 10, hpBarY + 36);
 
-                // Delta label
+                // Delta label with units
                 var dHp = car.hp - avgHp;
                 p.textSize(15);
                 if (Math.abs(dHp) < 1) {
@@ -453,10 +453,10 @@
                     p.text("same as avg", hpX, hpBarY + 68);
                 } else if (dHp > 0) {
                     p.fill(34, 139, 34); // green
-                    p.text("\u2191 " + dHp.toFixed(0) + " more", hpX, hpBarY + 68);
+                    p.text("\u2191 " + dHp.toFixed(0) + " hp more", hpX, hpBarY + 68);
                 } else {
                     p.fill(200, 80, 80); // red
-                    p.text("\u2193 " + Math.abs(dHp).toFixed(0) + " less", hpX, hpBarY + 68);
+                    p.text("\u2193 " + Math.abs(dHp).toFixed(0) + " hp less", hpX, hpBarY + 68);
                 }
 
                 // Legend at bottom
