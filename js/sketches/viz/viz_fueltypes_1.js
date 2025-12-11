@@ -209,6 +209,24 @@
                 p.text(Math.round(val), innerLeft - 6, yPos);
             }
 
+            // --- Draw EU 2021 Target Line ------------------------------------
+            var euTarget = 95;
+            var yTarget = p.map(euTarget, 0, MAX_Y, innerBottom, innerTop);
+            
+            // Dashed line
+            p.stroke(100, 100, 120);
+            p.strokeWeight(2);
+            p.drawingContext.setLineDash([8, 6]);
+            p.line(innerLeft, yTarget, innerRight, yTarget);
+            p.drawingContext.setLineDash([]); // Reset to solid
+            
+            // Label at right side
+            p.noStroke();
+            p.fill(100, 100, 120);
+            p.textSize(12);
+            p.textAlign(p.RIGHT, p.BOTTOM);
+            p.text('EU 2021 Target: 95 g/km', innerRight, yTarget - 4);
+
             // --- Draw boxplots -----------------------------------------------
             var n = categories.length;
             var boxGap = 60;
