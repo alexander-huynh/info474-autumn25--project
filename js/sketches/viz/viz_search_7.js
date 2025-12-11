@@ -330,14 +330,7 @@
             var infoY = cardY + 158;
 
             if (!searchHasRun) {
-                p.textSize(15);
-                p.text(
-                    "Start typing the name of your car and press Enter.\n" +
-                    "We'll look it up in the EU emissions dataset and show\n" +
-                    "how it compares to the average car.",
-                    infoX,
-                    infoY
-                );
+                // No instruction text needed - index.html already explains
                 return;
             }
 
