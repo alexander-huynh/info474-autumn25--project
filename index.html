@@ -5,6 +5,10 @@
   <title>Scrolling Sections</title>
   <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
   <link rel="stylesheet" type="text/css" href="css/style.css" />
+  <style>
+    .petrol { color: #FF8C00; font-weight: 500; }
+    .diesel { color: #228B22; font-weight: 500; }
+  </style>
 </head>
 
 <body>
@@ -43,16 +47,24 @@
           <div class="title">Fuel Type: Where Emissions Begin</div>
           <p>
             Every vehicle's emission story starts with what it burns. Fuel type creates the most immediate and
-            noticeable differences in CO₂ output. Petrol and diesel, the two most common fuels, behave differently when
-            ignited — one burns hotter and releases more CO₂ per drop, while the other burns slightly cleaner but still
-            produces significant emissions. Even without any engineering background, it's helpful to imagine fuel like
-            wood in a fireplace: some logs create thick smoke, others burn more lightly, and that distinction alone
-            shapes the entire experience.
+            noticeable differences in CO₂ output. <span class="petrol">Petrol</span> and <span class="diesel">diesel</span>, 
+            the two most common fuels, behave differently when ignited — the former burns hotter and releases more CO₂ 
+            per drop, while the latter burns slightly cleaner but still produces significant emissions. Even without 
+            any engineering background, it's helpful to imagine fuel like wood in a fireplace: some logs create thick 
+            smoke, others burn more lightly, and that distinction alone shapes the entire experience.
+          </p>
+          <p>
+            Throughout this article, <span class="petrol">petrol</span> appears in orange and 
+            <span class="diesel">diesel</span> in green — colors chosen to help you quickly identify fuel types 
+            across all visualizations.
           </p>
           <p>
             Because fuel determines the basic chemistry of combustion, two cars with similar shapes, weights, or brands
             can end up producing very different emissions simply due to what goes into the tank. This foundational idea
             sets the stage for everything else that follows.
+          </p>
+          <p class="usability-note">
+            <em>Hover over the boxes to see detailed statistics for each fuel type.</em>
           </p>
         </section>
         <div class="vis-slot"></div>
@@ -71,6 +83,10 @@
             while certain smaller engines produce more emissions than expected due to inefficiencies in their design.
             These exceptions make the pattern more interesting, and the visualizations help highlight where real-world
             vehicles fall along this spectrum.
+          </p>
+          <p class="usability-note">
+            <em>Use the filter buttons to compare <span class="petrol">petrol</span> vs <span class="diesel">diesel</span> vehicles. 
+            Toggle the Guide to see how engine sizes map to vehicle categories (Economy, Standard, SUV/Sport, Luxury).</em>
           </p>
         </section>
         <div class="vis-slot"></div>
@@ -91,6 +107,10 @@
             than expected. The tension between performance and environmental impact becomes clear as you explore this
             part of the story.
           </p>
+          <p class="usability-note">
+            <em>Filter by <span class="petrol">petrol</span> or <span class="diesel">diesel</span> to see how each fuel type 
+            performs across power levels. The Guide button reveals performance categories.</em>
+          </p>
         </section>
         <div class="vis-slot"></div>
 
@@ -109,6 +129,10 @@
             simply because of the design philosophies behind them. These choices influence everything from engine size
             to power output, and ultimately, how much CO₂ a vehicle releases.
           </p>
+          <p class="usability-note">
+            <em>Use the Sort button to order by emissions or alphabetically. Filter by <span class="petrol">petrol</span> 
+            or <span class="diesel">diesel</span> to compare fuel types. Navigate pages with the arrow buttons.</em>
+          </p>
         </section>
         <div class="vis-slot"></div>
 
@@ -122,8 +146,12 @@
             while others lean toward larger, more powerful vehicles.
           </p>
           <p>
-            This visualization lets you explore how average CO₂ emissions vary across countries, revealing the
+            This visualization lets you explore how average CO₂ emissions vary across European countries, revealing the
             collective impact of policy, culture, and market forces on the cars people drive.
+          </p>
+          <p class="usability-note">
+            <em>Toggle between combined fleet averages or compare <span class="petrol">petrol</span> vs 
+            <span class="diesel">diesel</span> separately. Sort by emissions or country name.</em>
           </p>
         </section>
         <div class="vis-slot"></div>
@@ -141,6 +169,10 @@
             Choosing a car isn't about finding a single perfect option — it's about aligning with what matters most to
             you. The visual tools here make those compromises easier to see and understand.
           </p>
+          <p class="usability-note">
+            <em>Drag the sliders to set your maximum CO₂ and minimum horsepower. Select a fuel type, then use the 
+            search box to find specific makes or models. Results show the cleanest cars matching your criteria.</em>
+          </p>
         </section>
         <div class="vis-slot"></div>
 
@@ -156,6 +188,10 @@
           <p>
             This feature ties the narrative back to individual experience, turning data into something directly
             relevant.
+          </p>
+          <p class="usability-note">
+            <em>Click the search box, type your car's name (e.g., "Prius", "Golf", "3 Series"), and press Enter 
+            to see how it compares to the dataset average.</em>
           </p>
         </section>
         <div class="vis-slot"></div>
@@ -203,6 +239,14 @@
           <p>
             Whether you're comparing cars, learning about climate impact, or simply curious, the goal is to help you
             make sense of the forces shaping the vehicles we drive every day.
+          </p>
+          <p>
+            <strong>A note on electric vehicles:</strong> This analysis focuses on <span class="petrol">petrol</span> 
+            and <span class="diesel">diesel</span> vehicles, which still represent the majority of cars on the road today. 
+            Electric vehicles, while increasingly important, operate on fundamentally different principles — producing 
+            zero direct emissions but shifting the environmental question to electricity generation. They deserve their 
+            own dedicated exploration, a natural next step for readers interested in the full picture of automotive 
+            emissions.
           </p>
           <img src="img/carbuying.jpeg" alt="Illustration of cars with exhaust fumes" class="section-image" />
         </section>
