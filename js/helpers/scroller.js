@@ -64,8 +64,18 @@
             self.onProgress(sectionIndex, progress);
         };
 
+        // Throttled scroll handler to prevent rapid-fire updates
+        var scrollTimeout = null;
+        var handleScroll = function () {
+            if (scrollTimeout) return;
+            scrollTimeout = setTimeout(function () {
+                scrollTimeout = null;
+                self.position();
+            }, 16); // ~60fps throttle
+        };
+
         window.addEventListener('resize', this.resize);
-        window.addEventListener('scroll', this.position);
+        window.addEventListener('scroll', handleScroll);
         setTimeout(function () { self.resize(); self.position(); }, 50);
     }
 
