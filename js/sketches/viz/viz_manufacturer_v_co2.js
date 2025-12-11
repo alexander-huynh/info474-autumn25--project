@@ -195,7 +195,7 @@
             }
 
             var rowH = (availH - 40) / itemsPerPage; // Reserve space for arrows
-            var barMaxW = availW - 150;
+var barMaxW = availW - 210;  // Extra 60px for label
 
             p.push();
 

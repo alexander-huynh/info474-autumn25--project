@@ -51,12 +51,13 @@
     }
 
     function getEngineSize(d) {
+        // Dataset uses 'power' for engine size in cc
         return getNumericFromKeys(d, [
+            "power",
+            "engine_capacity_cm3",
             "engine_size",
             "engine_capacity",
-            "engine_displacement",
-            "engine_cc",
-            "engine_size_cc"
+            "engine_cc"
         ]);
     }
 
@@ -263,34 +264,35 @@
             p.fill(255);
             p.rect(cardX, cardY, cardW, cardH, 6);
 
-            // title + subtitle
+            // title
             p.fill(0);
             p.textAlign(p.LEFT, p.TOP);
-            p.textSize(30);
+            p.textSize(28);
             p.text("How Does Your Car Compare?", cardX + 12, cardY + 10);
 
-            p.textSize(18);
+            // subtitle - shorter to avoid cutoff
+            p.textSize(16);
             p.fill(90);
             p.text(
-                "Search your car model to compare its CO\u2082 and power to the dataset average.",
+                "Compare your car's CO\u2082 and power to the dataset average.",
                 cardX + 12,
-                cardY + 45
+                cardY + 44
             );
 
             // search label
-            p.textSize(18);
+            p.textSize(16);
             p.fill(0);
             p.text(
                 "Search car model (type and press Enter):",
                 cardX + 40,
-                cardY + 85
+                cardY + 80
             );
 
             // faux input box
             var inputX = cardX + 40;
-            var inputY = cardY + 115;
+            var inputY = cardY + 108;
             var inputW = cardW - 80;
-            var inputH = 38;
+            var inputH = 36;
 
             inputBounds = { x: inputX, y: inputY, w: inputW, h: inputH };
 
@@ -301,7 +303,7 @@
 
             p.noStroke();
             p.textAlign(p.LEFT, p.CENTER);
-            p.textSize(16);
+            p.textSize(15);
 
             // placeholder is just the initial text; draw it lighter when unfocused
             if (isPlaceholder && !inputFocused) {
@@ -325,14 +327,14 @@
             p.fill(0);
 
             var infoX = cardX + 40;
-            var infoY = cardY + 170;
+            var infoY = cardY + 158;
 
             if (!searchHasRun) {
-                p.textSize(16);
+                p.textSize(15);
                 p.text(
                     "Start typing the name of your car and press Enter.\n" +
-                    "We'll look it up in the EU emissions dataset and show how it compares\n" +
-                    "to the average car in terms of CO\u2082 and horsepower.",
+                    "We'll look it up in the EU emissions dataset and show\n" +
+                    "how it compares to the average car.",
                     infoX,
                     infoY
                 );
@@ -340,10 +342,10 @@
             }
 
             if (!lastResult) {
-                p.textSize(16);
+                p.textSize(15);
                 p.text(
                     "No matching cars found in the dataset.\n" +
-                    "Try a shorter or simpler search (for example just 'Golf' or 'Prius').",
+                    "Try a shorter or simpler search (e.g., 'Golf' or 'Prius').",
                     infoX,
                     infoY
                 );
@@ -354,37 +356,43 @@
             var car = lastResult;
 
             var lineY = infoY;
-            p.textSize(18);
-            p.text("Closest match:", infoX, lineY);
-            lineY += 28;
-
-            p.textSize(26);
-            p.text(car.make + " " + car.model, infoX, lineY);
-            lineY += 38;
-
             p.textSize(16);
-            var engText = isFinite(car.engine) ? car.engine.toFixed(0) + " cc" : "n/a";
-            p.text("Fuel: " + car.fuel + "    |    Engine: " + engText, infoX, lineY);
-            lineY += 45;
+            p.text("Closest match:", infoX, lineY);
+            lineY += 24;
+
+            p.textSize(24);
+            p.text(car.make + " " + car.model, infoX, lineY);
+            lineY += 32;
+
+            // Just show fuel type and engine size
+            p.textSize(15);
+            p.fill(80);
+            var engText = isFinite(car.engine) ? (car.engine / 1000).toFixed(1) + "L" : "";
+            if (engText) {
+                p.text("Fuel: " + car.fuel + "  |  Engine: " + engText, infoX, lineY);
+            } else {
+                p.text("Fuel: " + car.fuel, infoX, lineY);
+            }
+            lineY += 35;
 
             // Side-by-side comparison bars
             if (isFinite(avgCo2) && isFinite(avgHp)) {
                 var barAreaX = infoX;
                 var barAreaY = lineY;
                 var barW = (cardW - 120) / 2 - 20; // two columns with gap
-                var barH = 22;
+                var barH = 20;
                 var gap = 50;
 
                 // CO2 column (left)
                 var co2X = barAreaX;
-                p.textSize(17);
+                p.textSize(16);
                 p.fill(0);
                 p.text("CO\u2082 (g/km)", co2X, barAreaY);
-                p.textSize(13);
+                p.textSize(12);
                 p.fill(100);
-                p.text("lower is better", co2X, barAreaY + 20);
+                p.text("lower is better", co2X, barAreaY + 18);
 
-                var co2BarY = barAreaY + 46;
+                var co2BarY = barAreaY + 40;
                 var maxCo2 = Math.max(avgCo2, car.co2) * 1.15;
 
                 // Your car bar
@@ -393,40 +401,40 @@
                 var carCo2Len = barW * (car.co2 / maxCo2);
                 p.rect(co2X, co2BarY, carCo2Len, barH, 3);
                 p.fill(0);
-                p.textSize(15);
-                p.text(car.co2.toFixed(0), co2X + carCo2Len + 10, co2BarY + 4);
+                p.textSize(14);
+                p.text(car.co2.toFixed(0), co2X + carCo2Len + 8, co2BarY + 3);
 
                 // Average bar
                 p.fill(200);
                 var avgCo2Len = barW * (avgCo2 / maxCo2);
-                p.rect(co2X, co2BarY + 32, avgCo2Len, barH, 3);
+                p.rect(co2X, co2BarY + 28, avgCo2Len, barH, 3);
                 p.fill(100);
-                p.text(avgCo2.toFixed(0) + "", co2X + avgCo2Len + 10, co2BarY + 36);
+                p.text(avgCo2.toFixed(0), co2X + avgCo2Len + 8, co2BarY + 31);
 
                 // Delta label with units
                 var dCo2 = car.co2 - avgCo2;
-                p.textSize(15);
+                p.textSize(14);
                 if (Math.abs(dCo2) < 1) {
                     p.fill(100);
-                    p.text("same as avg", co2X, co2BarY + 68);
+                    p.text("same as avg", co2X, co2BarY + 58);
                 } else if (dCo2 < 0) {
                     p.fill(34, 139, 34); // green
-                    p.text("\u2193 " + Math.abs(dCo2).toFixed(0) + " g/km lower", co2X, co2BarY + 68);
+                    p.text("\u2193 " + Math.abs(dCo2).toFixed(0) + " g/km lower", co2X, co2BarY + 58);
                 } else {
                     p.fill(200, 80, 80); // red
-                    p.text("\u2191 " + dCo2.toFixed(0) + " g/km higher", co2X, co2BarY + 68);
+                    p.text("\u2191 " + dCo2.toFixed(0) + " g/km higher", co2X, co2BarY + 58);
                 }
 
                 // HP column (right)
                 var hpX = barAreaX + barW + gap;
-                p.textSize(17);
+                p.textSize(16);
                 p.fill(0);
                 p.text("Horsepower", hpX, barAreaY);
-                p.textSize(13);
+                p.textSize(12);
                 p.fill(100);
-                p.text("higher is better", hpX, barAreaY + 20);
+                p.text("higher is better", hpX, barAreaY + 18);
 
-                var hpBarY = barAreaY + 46;
+                var hpBarY = barAreaY + 40;
                 var maxHp = Math.max(avgHp, car.hp) * 1.15;
 
                 // Your car bar
@@ -435,43 +443,43 @@
                 var carHpLen = barW * (car.hp / maxHp);
                 p.rect(hpX, hpBarY, carHpLen, barH, 3);
                 p.fill(0);
-                p.textSize(15);
-                p.text(car.hp.toFixed(0), hpX + carHpLen + 10, hpBarY + 4);
+                p.textSize(14);
+                p.text(car.hp.toFixed(0), hpX + carHpLen + 8, hpBarY + 3);
 
                 // Average bar
                 p.fill(200);
                 var avgHpLen = barW * (avgHp / maxHp);
-                p.rect(hpX, hpBarY + 32, avgHpLen, barH, 3);
+                p.rect(hpX, hpBarY + 28, avgHpLen, barH, 3);
                 p.fill(100);
-                p.text(avgHp.toFixed(0) + "", hpX + avgHpLen + 10, hpBarY + 36);
+                p.text(avgHp.toFixed(0), hpX + avgHpLen + 8, hpBarY + 31);
 
                 // Delta label with units
                 var dHp = car.hp - avgHp;
-                p.textSize(15);
+                p.textSize(14);
                 if (Math.abs(dHp) < 1) {
                     p.fill(100);
-                    p.text("same as avg", hpX, hpBarY + 68);
+                    p.text("same as avg", hpX, hpBarY + 58);
                 } else if (dHp > 0) {
                     p.fill(34, 139, 34); // green
-                    p.text("\u2191 " + dHp.toFixed(0) + " hp more", hpX, hpBarY + 68);
+                    p.text("\u2191 " + dHp.toFixed(0) + " hp more", hpX, hpBarY + 58);
                 } else {
                     p.fill(200, 80, 80); // red
-                    p.text("\u2193 " + Math.abs(dHp).toFixed(0) + " hp less", hpX, hpBarY + 68);
+                    p.text("\u2193 " + Math.abs(dHp).toFixed(0) + " hp less", hpX, hpBarY + 58);
                 }
 
                 // Legend at bottom
-                var legendY = hpBarY + 105;
-                p.textSize(14);
+                var legendY = hpBarY + 90;
+                p.textSize(13);
                 p.noStroke();
                 p.fill(40, 120, 200);
-                p.rect(barAreaX, legendY, 16, 16, 2);
+                p.rect(barAreaX, legendY, 14, 14, 2);
                 p.fill(80);
-                p.text("Your car", barAreaX + 24, legendY + 1);
+                p.text("Your car", barAreaX + 20, legendY);
 
                 p.fill(200);
-                p.rect(barAreaX + 110, legendY, 16, 16, 2);
+                p.rect(barAreaX + 100, legendY, 14, 14, 2);
                 p.fill(80);
-                p.text("Dataset average", barAreaX + 134, legendY + 1);
+                p.text("Dataset average", barAreaX + 120, legendY);
             }
         }
     };

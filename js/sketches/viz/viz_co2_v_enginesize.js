@@ -111,22 +111,7 @@
             }
 
             // -------------------------------------------------------------
-            // Apply fuel filter
-            // -------------------------------------------------------------
-            var mode = manager.fuelFilter || "All";
-            if (mode === "Petrol") pts = pts.filter(d => d.fuel === "Petrol");
-            if (mode === "Diesel") pts = pts.filter(d => d.fuel === "Diesel");
-
-            if (!pts.length) {
-                p.fill(0);
-                p.textAlign(p.CENTER, p.CENTER);
-                p.textSize(16);
-                p.text('No vehicles match this filter.', left + w / 2, top + h / 2);
-                return;
-            }
-
-            // -------------------------------------------------------------
-            // Min/max
+            // Min/max - compute from ALL data BEFORE filtering for consistent scales
             // -------------------------------------------------------------
             var minCo2 = Infinity, maxCo2 = -Infinity;
             var minPower = Infinity, maxPower = -Infinity;
@@ -156,6 +141,21 @@
             // Round CO₂ to nearest 20 g/km, clamp at 0
             minCo2 = Math.max(0, Math.floor(minCo2 / 20) * 20);
             maxCo2 = Math.ceil(maxCo2 / 20) * 20;
+
+            // -------------------------------------------------------------
+            // Apply fuel filter AFTER computing scales
+            // -------------------------------------------------------------
+            var mode = manager.fuelFilter || "All";
+            if (mode === "Petrol") pts = pts.filter(d => d.fuel === "Petrol");
+            if (mode === "Diesel") pts = pts.filter(d => d.fuel === "Diesel");
+
+            if (!pts.length) {
+                p.fill(0);
+                p.textAlign(p.CENTER, p.CENTER);
+                p.textSize(16);
+                p.text('No vehicles match this filter.', left + w / 2, top + h / 2);
+                return;
+            }
 
             function clamp(v, lo, hi) {
                 return Math.max(lo, Math.min(hi, v));

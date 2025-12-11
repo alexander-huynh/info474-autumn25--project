@@ -113,21 +113,7 @@
       }
 
       //------------------------------------------------------------------
-      //  FILTER LOGIC
-      //------------------------------------------------------------------
-      var mode = (manager.fuelFilter || "All");
-
-      if (mode === "Petrol") pts = pts.filter(d => d.fuel === "Petrol");
-      if (mode === "Diesel") pts = pts.filter(d => d.fuel === "Diesel");
-
-      // If nothing survives the filter
-      if (!pts.length) {
-        p.text("No data for selected fuel type.", left + w / 2, top + h / 2);
-        return;
-      }
-
-      //------------------------------------------------------------------
-      // Compute ranges
+      // Compute ranges from ALL data BEFORE filtering for consistent scales
       //------------------------------------------------------------------
       var minPower = Infinity, maxPower = -Infinity;
       var minCo2 = Infinity, maxCo2 = -Infinity;
@@ -144,6 +130,20 @@
       maxPower = Math.min(maxPower, 900);
       minCo2 = Math.max(minCo2, 0);
       maxCo2 = Math.min(maxCo2, 5050);
+
+      //------------------------------------------------------------------
+      //  FILTER LOGIC - apply AFTER computing scales
+      //------------------------------------------------------------------
+      var mode = (manager.fuelFilter || "All");
+
+      if (mode === "Petrol") pts = pts.filter(d => d.fuel === "Petrol");
+      if (mode === "Diesel") pts = pts.filter(d => d.fuel === "Diesel");
+
+      // If nothing survives the filter
+      if (!pts.length) {
+        p.text("No data for selected fuel type.", left + w / 2, top + h / 2);
+        return;
+      }
 
       //------------------------------------------------------------------
       // Layout region
